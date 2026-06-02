@@ -2,7 +2,7 @@
 import { createClient } from '@supabase/supabase-js'
 
 // 请把下方单引号里的内容替换成你的 Project URL 和 anon key
-const supabaseUrl = 'https://rczqlxxveukukuuwluzg.supabase.cn/'
+const supabaseUrl = 'https://supabase-proxy.wenye2413.workers.dev'
 const supabaseAnonKey = 'sb_publishable_6zAx4O5bTDOOSe7Pv3uUpw_2sECW0xR'
 
 // 强制清理所有 Supabase 本地缓存，防止旧的 .co 域名干扰
