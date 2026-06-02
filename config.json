@@ -1,0 +1,18 @@
+{
+  "models": [
+    {
+      "title": "DeepSeek-Chat",
+      "provider": "openai",
+      "model": "deepseek-chat",
+      "apiBase": "https://api.deepseek.com",
+      "apiKey": "sk-你的DeepSeek API Key",
+      "contextLength": 128000,
+      "completionOptions": {
+        "model": "deepseek-chat",
+        "maxTokens": 4096,
+        "temperature": 0.1,
+        "topP": 0.9
+      }
+    }
+  ]
+}
