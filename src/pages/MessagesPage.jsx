@@ -278,7 +278,11 @@ export default function MessagesPage() {
   }, []);
 
   const handleAvatarClick = (userId) => {
-    navigate(`/profile/${userId}`);
+    if (userId === user?.id) {
+      navigate(`/profile`)
+    } else {
+      navigate(`/profile/${userId}`)
+    }
   };
 
   const handleCardClick = (postId) => {
@@ -475,8 +479,10 @@ export default function MessagesPage() {
           <div className="pb-3">
             <div className="flex items-center gap-3 bg-surface-container-low rounded-xl px-4 py-3">
               <span className="material-symbols-outlined text-primary text-[18px]">my_location</span>
-              <input type="range" min={MIN_RADIUS} max={MAX_RADIUS} step={50} value={radius}
+              <input type="range" min={MIN_RADIUS} max={MAX_RADIUS} step={10} value={radius}
                 onChange={(e) => setRadius(Number(e.target.value))}
+                onTouchStart={(e) => e.stopPropagation()}
+                onTouchMove={(e) => e.stopPropagation()}
                 className="flex-1 accent-primary h-1.5" />
               <span className="text-xs font-semibold text-primary w-14 text-right">
                 {radius >= 1000 ? `${(radius / 1000).toFixed(1)}km` : `${radius}m`}
