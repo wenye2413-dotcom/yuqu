@@ -100,20 +100,24 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<RegisterPage />} />
-        {/* 公开的个人主页 - 不登录也可访问 */}
-        <Route path="/profile/:userId" element={<UserProfilePage />} />
         <Route path="/*" element={
-          <AuthGuard>
-            <ToastProvider>
-              <PostProvider>
-                <MobileLayout>
-                  <AnimatedRoutes>
-                    <AppRoutes />
-                  </AnimatedRoutes>
-                </MobileLayout>
-              </PostProvider>
-            </ToastProvider>
-          </AuthGuard>
+          <ToastProvider>
+            <Routes>
+              {/* 公开的个人主页 - 不登录也可访问 */}
+              <Route path="/profile/:userId" element={<UserProfilePage />} />
+              <Route path="*" element={
+                <AuthGuard>
+                  <PostProvider>
+                    <MobileLayout>
+                      <AnimatedRoutes>
+                        <AppRoutes />
+                      </AnimatedRoutes>
+                    </MobileLayout>
+                  </PostProvider>
+                </AuthGuard>
+              } />
+            </Routes>
+          </ToastProvider>
         } />
       </Routes>
     </AuthProvider>
