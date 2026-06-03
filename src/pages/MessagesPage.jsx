@@ -77,12 +77,58 @@ export default function MessagesPage() {
   const newMessageBtnRef = useRef(null);
 
   const [refreshing, setRefreshing] = useState(false);
+  const [pullDistance, setPullDistance] = useState(0);
+  const [showEmoji, setShowEmoji] = useState(false);
+  const scrollRef = useRef(null);
+  const pullStartY = useRef(0);
+  const isPulling = useRef(false);
+
+  const emojis = ['😀','😊','😂','🤣','❤️','🔥','👍','😍','🥰','😎','🙏','💪','😅','🤔','😭','😘','🥺','😤','🤩','✨','🎉','💯','😈','👏','😏','🙄','😴','🤗','😱','🤯']
 
   const handleRefresh = async () => {
     setRefreshing(true)
     await Promise.all([fetchPosts(), fetchProfiles()])
     setRefreshing(false)
+    setPullDistance(0)
     toast("已刷新", "success")
+  }
+
+  // 下拉刷新
+  const handleTouchStart = (e) => {
+    if (scrollRef.current && scrollRef.current.scrollTop === 0) {
+      pullStartY.current = e.touches[0].clientY
+      isPulling.current = true
+    }
+  }
+
+  const handleTouchMove = (e) => {
+    if (!isPulling.current) return
+    const diff = e.touches[0].clientY - pullStartY.current
+    if (diff > 0) {
+      setPullDistance(Math.min(diff * 0.5, 80))
+      if (diff > 100) {
+        // 触及刷新阈值 — 立即触发
+        isPulling.current = false
+        setPullDistance(0)
+        handleRefresh()
+      }
+    }
+  }
+
+  const handleTouchEnd = () => {
+    if (isPulling.current) {
+      if (pullDistance > 50) {
+        handleRefresh()
+      } else {
+        setPullDistance(0)
+      }
+      isPulling.current = false
+    }
+  }
+
+  const insertEmoji = (emoji) => {
+    setNewMessage((prev) => prev + emoji)
+    setShowEmoji(false)
   }
 
   const [filterDist, setFilterDist] = useState(5000);
@@ -341,7 +387,27 @@ export default function MessagesPage() {
   return (
     <div className="h-full flex flex-col">
       {/* 消息流 */}
-      <div className="flex-1 overflow-y-auto px-margin-mobile pb-2">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-margin-mobile pb-2 overscroll-none"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        {/* 下拉刷新指示器 */}
+        {pullDistance > 0 && (
+          <div className="flex items-center justify-center py-2 transition-all" style={{ height: pullDistance, opacity: Math.min(pullDistance / 50, 1) }}>
+            <span className={`material-symbols-outlined text-primary ${pullDistance > 50 ? '' : 'animate-spin'}`} style={{ fontVariationSettings: "'FILL' 1" }}>
+              {pullDistance > 50 ? 'arrow_downward' : 'refresh'}
+            </span>
+            <span className="text-xs text-primary ml-2">{pullDistance > 50 ? '释放刷新' : '下拉刷新'}</span>
+          </div>
+        )}
+        {/* 加载中指示器 */}
+        {refreshing && (
+          <div className="flex items-center justify-center py-3">
+            <span className="material-symbols-outlined text-primary animate-spin text-[18px]">refresh</span>
+            <span className="text-xs text-primary ml-2">刷新中...</span>
+          </div>
+        )}
         <div className="flex justify-between items-center pt-2 pb-3">
           <div className="font-label-md text-on-surface-variant text-label-md flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-primary-container" />
@@ -437,6 +503,9 @@ export default function MessagesPage() {
               </button>
             </div>
           )}
+          <button onClick={() => setShowEmoji(!showEmoji)} className="text-on-surface-variant/60 hover:text-on-surface-variant shrink-0 w-8 h-8 flex items-center justify-center">
+            <span className="text-lg">😊</span>
+          </button>
           <input
             ref={newMessageInputRef}
             type="text"
@@ -457,35 +526,34 @@ export default function MessagesPage() {
             <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>send</span>
           </button>
         </div>
+        {/* 表情选择器 */}
+        {showEmoji && (
+          <div className="flex flex-wrap gap-1.5 pt-2 pb-1 border-t border-surface-variant/20 mt-2 max-h-28 overflow-y-auto">
+            {emojis.map((emoji) => (
+              <button key={emoji} onClick={() => insertEmoji(emoji)} className="text-xl hover:bg-surface-container-low rounded-lg px-1 py-0.5 active:scale-110 transition-transform">
+                {emoji}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="shrink-0 h-20" />
 
       <button onClick={() => setFabOpen(true)}
-        className="fixed right-4 z-30 w-14 h-14 bg-primary text-white rounded-full shadow-[0_8px_24px_rgba(149,73,13,0.3)] flex items-center justify-center hover:scale-105 active:scale-95 transition-all"
+        className="fixed right-4 z-[70] w-14 h-14 bg-primary text-white rounded-full shadow-[0_8px_24px_rgba(149,73,13,0.3)] flex items-center justify-center hover:scale-105 active:scale-95 transition-all"
         style={{ bottom: safeBottom > 20 ? safeBottom + 16 : 152 }}>
         <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>add</span>
       </button>
 
       {filterOpen && (
         <>
-          <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setFilterOpen(false)} />
-          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 px-6 pt-4 pb-24 shadow-xl">
+          <div className="fixed inset-0 bg-black/30 z-40" onClick={applyFilter} />
+          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 px-6 pt-4 pb-12 shadow-xl">
             <div className="w-10 h-1 bg-surface-variant rounded-full mx-auto mb-4" />
-            <h3 className="font-label-md text-label-md text-center mb-6 text-on-surface">筛选</h3>
+            <h3 className="font-label-md text-label-md text-center mb-6 text-on-surface">按时间筛选</h3>
             <div className="mb-6">
-              <p className="font-label-sm text-label-sm text-on-surface mb-3">距离</p>
-              <div className="flex items-center gap-3 bg-surface-container-low rounded-xl px-4 py-3 border border-outline-variant/30">
-                <input type="range" min={0} max={5000} step={1} value={filterDist} onChange={(e) => setFilterDist(Number(e.target.value))} className="flex-1 accent-primary h-1.5 w-full" />
-                <div className="flex items-center gap-1 shrink-0">
-                  <input type="number" min={0} max={5000} value={filterDist} onChange={(e) => setFilterDist(Number(e.target.value))} className="w-16 text-center text-sm text-on-surface bg-white rounded-lg border border-outline-variant/30 py-1.5 outline-none" />
-                  <span className="text-xs text-on-surface-variant">m</span>
-                </div>
-              </div>
-              <div className="flex justify-between text-xs text-on-surface-variant/60 mt-1"><span>0m</span><span>5km</span></div>
-            </div>
-            <div className="mb-8">
-              <p className="font-label-sm text-label-sm text-on-surface mb-3">时间</p>
+              <p className="font-label-sm text-label-sm text-on-surface mb-3">时间范围</p>
               <div className="flex gap-2 flex-wrap">
                 {timeRanges.map((t) => (
                   <button key={t} onClick={() => { setFilterTime(t); setFilterDateValue(""); }}
@@ -512,10 +580,6 @@ export default function MessagesPage() {
             <div className="w-10 h-1 bg-surface-variant rounded-full mx-auto mb-4" />
             <h3 className="font-label-md text-label-md text-center mb-4 text-on-surface">发布</h3>
             <div className="flex flex-col gap-2">
-              <button onClick={() => { setFabOpen(false); navigate("/new-post"); }} className="flex items-center gap-4 px-4 py-4 bg-surface-container-low/50 rounded-xl text-left active:scale-[0.98] transition-transform">
-                <span className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-[20px]">💬</span>
-                <div><p className="font-label-md text-label-md text-on-surface">发帖</p><p className="text-xs text-on-surface-variant">分享动态到消息流</p></div>
-              </button>
               <button onClick={() => { setFabOpen(false); navigate("/publish-event"); }} className="flex items-center gap-4 px-4 py-4 bg-surface-container-low/50 rounded-xl text-left active:scale-[0.98] transition-transform">
                 <span className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-[20px]">📅</span>
                 <div><p className="font-label-md text-label-md text-on-surface">发布活动</p><p className="text-xs text-on-surface-variant">创建一场线下活动</p></div>
