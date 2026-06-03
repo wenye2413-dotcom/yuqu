@@ -21,7 +21,7 @@ function CommentThread({ reply, postId, profiles, currentUserId, onAvatarClick, 
     <div className="ml-1">
       <div className="flex items-start gap-2 py-1.5">
         <div onClick={() => onAvatarClick(reply.userId)} className="cursor-pointer shrink-0 mt-0.5">
-          <Avatar name={user?.avatar || "User"} size="w-6 h-6" />
+          <Avatar name={user?.name || "User"} size="w-6 h-6" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2">
@@ -388,7 +388,7 @@ export default function MessagesPage() {
     setFilterOpen(false);
   };
 
-  const profileForPost = (p) => profiles[p.userId] || { name: "用户", avatar: "User" };
+  const profileForPost = (p) => profiles[p.userId] || { name: "用户", avatar: p.userId };
 
   // 时间过滤
   const isInTimeRange = (createdAt) => {
@@ -532,7 +532,7 @@ export default function MessagesPage() {
                 <div onClick={() => handleCardClick(post.id)} className="p-4 cursor-pointer active:scale-[0.98] transition-transform" style={{ borderLeft: `4px solid ${post.color || "#356668"}` }}>
                   <div className="flex items-center gap-3 mb-2">
                     <div onClick={(e) => { e.stopPropagation(); handleAvatarClick(post.userId); }} className="cursor-pointer shrink-0">
-                      <Avatar name={usr?.avatar || "User"} size="w-10 h-10" />
+                      <Avatar name={usr?.name || "User"} size="w-10 h-10" />
                     </div>
                     <div className="flex-1 min-w-0" onClick={(e) => { e.stopPropagation(); handleAvatarClick(post.userId); }}>
                       <div className="flex justify-between items-baseline cursor-pointer">
