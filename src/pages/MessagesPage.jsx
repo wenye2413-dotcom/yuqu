@@ -253,6 +253,19 @@ export default function MessagesPage() {
     fetchProfiles();
   }, [location]); // location 变化时重新拉取
 
+  // 实时订阅新消息
+  useEffect(() => {
+    const channel = supabase
+      .channel('posts-live')
+      .on('postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'posts' },
+        () => { fetchPosts(); fetchProfiles(); }
+      )
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [])
+
   useEffect(() => {
     if (posts.length > prevPostCountRef.current) {
       const newIds = posts.slice(0, posts.length - prevPostCountRef.current).map((p) => p.id);
