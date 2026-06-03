@@ -45,10 +45,10 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-surface px-4">
       <div className="max-w-md w-full bg-white rounded-xl p-6 shadow-lg border border-outline-variant/30">
-        {/* 和合 Logo */}
+        {/* 友趣 Logo */}
         <div className="text-center mb-8">
-          <div className="relative inline-flex items-center justify-center mb-4">
-            {/* 太极装饰环 */}
+          <div className="relative inline-flex items-center justify-center mb-3">
+            {/* 装饰环 */}
             <svg className="absolute w-24 h-24" viewBox="0 0 96 96">
               <defs>
                 <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -69,10 +69,10 @@ const Login = () => {
               letterSpacing: '-0.04em',
               lineHeight: 1,
             }}>
-              和合
+              友趣
             </span>
           </div>
-          <p className="text-sm text-on-surface-variant/60 tracking-widest uppercase" style={{ letterSpacing: '0.3em' }}>WARM CIRCLE</p>
+          <p className="text-sm text-on-surface-variant/60" style={{ letterSpacing: '0.15em' }}>发现身边有趣的人和事</p>
         </div>
 
         <form onSubmit={handleLogin} className="flex flex-col gap-4">

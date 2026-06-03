@@ -8,7 +8,7 @@ export default function RegisterPage() {
   const { isLoggedIn, loading } = useAuth();
 
   if (loading) return null;
-  if (isLoggedIn) return <Navigate to="/discovery" replace />;
+  if (isLoggedIn) return <Navigate to="/messages" replace />;
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6">
@@ -17,7 +17,7 @@ export default function RegisterPage() {
           <span className="material-symbols-outlined text-white text-4xl">how_to_reg</span>
         </div>
         <h1 className="font-headline-xl text-headline-xl text-on-surface">注册账号</h1>
-        <p className="text-sm text-on-surface-variant mt-1">加入和合社区</p>
+        <p className="text-sm text-on-surface-variant mt-1">发现身边有趣的人和事</p>
       </div>
       <div className="w-full max-w-sm">
         <Auth
