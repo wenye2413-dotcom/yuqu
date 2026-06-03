@@ -8,7 +8,7 @@ export default function LoginPage() {
   const { isLoggedIn, loading } = useAuth();
 
   if (loading) return null;
-  if (isLoggedIn) return <Navigate to="/discovery" replace />;
+  if (isLoggedIn) return <Navigate to="/messages" replace />;
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6">

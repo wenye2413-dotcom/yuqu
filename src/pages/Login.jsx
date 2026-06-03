@@ -10,7 +10,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  if (user) return <Navigate to="/" replace />
+  if (user) return <Navigate to="/messages" replace />
 
   const handleLogin = async (e) => {
     e.preventDefault()
@@ -45,7 +45,35 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-surface px-4">
       <div className="max-w-md w-full bg-white rounded-xl p-6 shadow-lg border border-outline-variant/30">
-        <h1 className="text-headline-lg-mobile font-bold text-center mb-6">和合</h1>
+        {/* 和合 Logo */}
+        <div className="text-center mb-8">
+          <div className="relative inline-flex items-center justify-center mb-4">
+            {/* 太极装饰环 */}
+            <svg className="absolute w-24 h-24" viewBox="0 0 96 96">
+              <defs>
+                <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#95490d" />
+                  <stop offset="100%" stopColor="#356668" />
+                </linearGradient>
+              </defs>
+              <circle cx="48" cy="48" r="44" fill="none" stroke="url(#ringGrad)" strokeWidth="1.5" strokeDasharray="6 4" opacity="0.5" />
+              <circle cx="48" cy="48" r="38" fill="none" stroke="#95490d" strokeWidth="0.5" opacity="0.15" />
+            </svg>
+            {/* 文字 */}
+            <span className="text-5xl font-black tracking-tight" style={{
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              background: 'linear-gradient(135deg, #95490d 0%, #ff9d5c 40%, #356668 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              textShadow: 'none',
+              letterSpacing: '-0.04em',
+              lineHeight: 1,
+            }}>
+              和合
+            </span>
+          </div>
+          <p className="text-sm text-on-surface-variant/60 tracking-widest uppercase" style={{ letterSpacing: '0.3em' }}>WARM CIRCLE</p>
+        </div>
 
         <form onSubmit={handleLogin} className="flex flex-col gap-4">
           <input

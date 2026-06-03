@@ -68,7 +68,7 @@ function AnimatedRoutes({ children }) {
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/discovery" replace />} />
+      <Route path="/" element={<Navigate to="/messages" replace />} />
       <Route path="/messages" element={<MessagesPage />} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/chat/:chatId" element={<ChatRoomPage />} />

@@ -76,6 +76,15 @@ export default function MessagesPage() {
   const newMessageInputRef = useRef(null);
   const newMessageBtnRef = useRef(null);
 
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true)
+    await Promise.all([fetchPosts(), fetchProfiles()])
+    setRefreshing(false)
+    toast("已刷新", "success")
+  }
+
   const [filterDist, setFilterDist] = useState(5000);
   const [filterTime, setFilterTime] = useState("今天");
   const [filterDateValue, setFilterDateValue] = useState("");
@@ -290,7 +299,35 @@ export default function MessagesPage() {
   };
 
   const profileForPost = (p) => profiles[p.userId] || { name: "用户", avatar: "User" };
-  const filteredPosts = posts;
+
+  // 时间过滤
+  const isInTimeRange = (createdAt) => {
+    if (!createdAt) return true
+    const now = new Date()
+    const d = new Date(createdAt)
+    switch (activeTime) {
+      case "今天":
+        return d.toDateString() === now.toDateString()
+      case "昨天":
+        const y = new Date(now)
+        y.setDate(y.getDate() - 1)
+        return d.toDateString() === y.toDateString()
+      case "本周":
+        const weekStart = new Date(now)
+        weekStart.setDate(now.getDate() - now.getDay())
+        return d >= weekStart
+      case "本月":
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+      default:
+        // 自定义日期
+        if (activeDateLabel) {
+          return d.toDateString() === new Date(activeTime + "T00:00:00").toDateString()
+        }
+        return true
+    }
+  }
+
+  const filteredPosts = posts.filter((p) => isInTimeRange(p.created_at))
 
   const countAll = (list) => {
     let n = 0;
@@ -310,9 +347,14 @@ export default function MessagesPage() {
             <span className="w-2 h-2 rounded-full bg-primary-container" />
             {activeDist >= 1000 ? `${(activeDist / 1000).toFixed(1)}km` : `${activeDist}m`} · {activeDateLabel || activeTime}
           </div>
-          <button onClick={() => setFilterOpen(true)} className="text-primary hover:opacity-80 transition-opacity">
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>tune</span>
-          </button>
+          <div className="flex items-center gap-1">
+            <button onClick={handleRefresh} disabled={refreshing} className="text-primary hover:opacity-80 transition-opacity p-1">
+              <span className={`material-symbols-outlined text-[20px] ${refreshing ? 'animate-spin' : ''}`}>refresh</span>
+            </button>
+            <button onClick={() => setFilterOpen(true)} className="text-primary hover:opacity-80 transition-opacity p-1">
+              <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>tune</span>
+            </button>
+          </div>
         </div>
 
         <div className="flex flex-col gap-gutter">
