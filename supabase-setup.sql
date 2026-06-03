@@ -16,9 +16,9 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
 -- 3. RLS 策略
-CREATE POLICY "用户可以查看自己的资料"
+CREATE POLICY "所有用户可查看资料"
   ON public.profiles FOR SELECT
-  USING (auth.uid() = id);
+  USING (auth.role() = 'authenticated');
 
 CREATE POLICY "用户可以创建自己的资料"
   ON public.profiles FOR INSERT

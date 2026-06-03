@@ -7,7 +7,8 @@ import { useLocation, calcDistance, formatDistance } from "../hooks/useLocation"
 import Avatar from "../components/common/Avatar";
 
 const timeRanges = ["今天", "昨天", "本周", "本月"];
-const RADII = [50, 100, 200, 500, 1000, 2000, 5000]
+const MIN_RADIUS = 50   // 最小 50 米
+const MAX_RADIUS = 10000 // 最大 10 公里
 
 /**
  * 递归评论组件（纯展示，回复走底部统一输入框）
@@ -162,7 +163,7 @@ export default function MessagesPage() {
     supabase
       .from("posts")
       .select("*")
-      .order("created_at", { ascending: false })
+      .order("created_at", { ascending: true })
       .then(async ({ data: postsData, error }) => {
         if (error) {
           console.error("获取消息失败:", error);
@@ -225,6 +226,12 @@ export default function MessagesPage() {
           }
         });
         setPosts(postsWithReplies);
+        // 滚动到底部（显示最新消息）
+        setTimeout(() => {
+          if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+          }
+        }, 100)
       });
   }
 
@@ -463,15 +470,21 @@ export default function MessagesPage() {
           </div>
         </div>
 
-        {/* 半径选择器 */}
+        {/* 半径滑块 */}
         {showRadiusPicker && (
-          <div className="flex gap-1.5 pb-3 flex-wrap">
-            {RADII.map((r) => (
-              <button key={r} onClick={() => { setRadius(r); setShowRadiusPicker(false) }}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${r === radius ? 'bg-primary text-white shadow-sm' : 'bg-surface-container-low text-on-surface-variant'}`}>
-                {r >= 1000 ? `${r / 1000}km` : `${r}m`}
-              </button>
-            ))}
+          <div className="pb-3">
+            <div className="flex items-center gap-3 bg-surface-container-low rounded-xl px-4 py-3">
+              <span className="material-symbols-outlined text-primary text-[18px]">my_location</span>
+              <input type="range" min={MIN_RADIUS} max={MAX_RADIUS} step={50} value={radius}
+                onChange={(e) => setRadius(Number(e.target.value))}
+                className="flex-1 accent-primary h-1.5" />
+              <span className="text-xs font-semibold text-primary w-14 text-right">
+                {radius >= 1000 ? `${(radius / 1000).toFixed(1)}km` : `${radius}m`}
+              </span>
+            </div>
+            <div className="flex justify-between text-[10px] text-on-surface-variant/50 px-1 mt-1">
+              <span>50m</span><span>1km</span><span>5km</span><span>10km</span>
+            </div>
           </div>
         )}
 
@@ -606,7 +619,7 @@ export default function MessagesPage() {
       {filterOpen && (
         <>
           <div className="fixed inset-0 bg-black/30 z-40" onClick={applyFilter} />
-          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 px-6 pt-4 pb-12 shadow-xl">
+          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 px-6 pt-4 pb-32 shadow-xl max-h-[70vh] overflow-y-auto">
             <div className="w-10 h-1 bg-surface-variant rounded-full mx-auto mb-4" />
             <h3 className="font-label-md text-label-md text-center mb-6 text-on-surface">时间筛选</h3>
             <div className="mb-6">
@@ -633,7 +646,7 @@ export default function MessagesPage() {
       {fabOpen && (
         <>
           <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setFabOpen(false)} />
-          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 px-6 pt-4 pb-24 shadow-xl">
+          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-[80] px-6 pt-4 pb-32 shadow-xl max-h-[70vh] overflow-y-auto">
             <div className="w-10 h-1 bg-surface-variant rounded-full mx-auto mb-4" />
             <h3 className="font-label-md text-label-md text-center mb-4 text-on-surface">发布</h3>
             <div className="flex flex-col gap-2">
