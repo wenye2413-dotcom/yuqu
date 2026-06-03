@@ -3,9 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../hooks/useToast";
+import { useLocation, calcDistance, formatDistance } from "../hooks/useLocation";
 import Avatar from "../components/common/Avatar";
 
 const timeRanges = ["今天", "昨天", "本周", "本月"];
+const RADII = [50, 100, 200, 500, 1000, 2000, 5000]
 
 /**
  * 递归评论组件（纯展示，回复走底部统一输入框）
@@ -138,6 +140,11 @@ export default function MessagesPage() {
   const [activeTime, setActiveTime] = useState("今天");
   const [activeDateLabel, setActiveDateLabel] = useState("");
 
+  // 位置相关
+  const { location, loading: locLoading, error: locError, permissionDenied, requestLocation } = useLocation()
+  const [radius, setRadius] = useState(100)        // 默认100米
+  const [showRadiusPicker, setShowRadiusPicker] = useState(false)
+
   const prevPostCountRef = useRef(0);
 
   function fetchProfiles() {
@@ -201,14 +208,22 @@ export default function MessagesPage() {
           repliesByPost[pid] = roots;
         });
 
-        const postsWithReplies = postsData.map((p) => ({
-          id: p.id,
-          userId: p.user_id,
-          time: formatRelativeTime(p.created_at),
-          message: p.content,
-          created_at: p.created_at,
-          replies: repliesByPost[p.id] || [],
-        }));
+        const postsWithReplies = postsData.map((p) => {
+          const d = (p.latitude && p.longitude && location)
+            ? calcDistance(location.lat, location.lng, p.latitude, p.longitude)
+            : null
+          return {
+            id: p.id,
+            userId: p.user_id,
+            time: formatRelativeTime(p.created_at),
+            message: p.content,
+            created_at: p.created_at,
+            latitude: p.latitude,
+            longitude: p.longitude,
+            distance: d,
+            replies: repliesByPost[p.id] || [],
+          }
+        });
         setPosts(postsWithReplies);
       });
   }
@@ -229,7 +244,7 @@ export default function MessagesPage() {
   useEffect(() => {
     fetchPosts();
     fetchProfiles();
-  }, []);
+  }, [location]); // location 变化时重新拉取
 
   useEffect(() => {
     if (posts.length > prevPostCountRef.current) {
@@ -303,12 +318,17 @@ export default function MessagesPage() {
       await fetchPosts();
       toast("回复成功", "success");
     } else {
-      // 发送新帖
+      // 发送新帖（带位置）
       setSendingNewMessage(true);
-      const { error } = await supabase.from("posts").insert({
+      const postData = {
         content: newMessage.trim(),
         user_id: user.id,
-      });
+      }
+      if (location) {
+        postData.latitude = location.lat
+        postData.longitude = location.lng
+      }
+      const { error } = await supabase.from("posts").insert(postData);
       setSendingNewMessage(false);
       if (error) {
         console.error("发送消息失败:", error);
@@ -373,7 +393,14 @@ export default function MessagesPage() {
     }
   }
 
-  const filteredPosts = posts.filter((p) => isInTimeRange(p.created_at))
+  const filteredPosts = posts.filter((p) => {
+    if (!isInTimeRange(p.created_at)) return false
+    // 有位置数据时按半径过滤，没位置数据时显示
+    if (location && p.distance !== null) {
+      return p.distance <= radius
+    }
+    return true
+  })
 
   const countAll = (list) => {
     let n = 0;
@@ -409,11 +436,24 @@ export default function MessagesPage() {
           </div>
         )}
         <div className="flex justify-between items-center pt-2 pb-3">
-          <div className="font-label-md text-on-surface-variant text-label-md flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-primary-container" />
-            {activeDist >= 1000 ? `${(activeDist / 1000).toFixed(1)}km` : `${activeDist}m`} · {activeDateLabel || activeTime}
+          <div className="flex items-center gap-2">
+            {/* 当前半径 — 可点击切换 */}
+            <button onClick={() => setShowRadiusPicker(!showRadiusPicker)}
+              className="flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-semibold">
+              <span className="material-symbols-outlined text-[14px]">my_location</span>
+              {radius >= 1000 ? `${radius / 1000}km` : `${radius}m`}
+            </button>
+            {/* 时间筛选 */}
+            <span className="text-xs text-on-surface-variant/60">{activeDateLabel || activeTime}</span>
           </div>
           <div className="flex items-center gap-1">
+            {/* 定位状态 */}
+            {locLoading && <span className="material-symbols-outlined text-on-surface-variant/40 text-[16px] animate-spin">location_searching</span>}
+            {permissionDenied && (
+              <button onClick={requestLocation} className="text-xs text-red-400" title="定位被拒绝，点击重试">
+                <span className="material-symbols-outlined text-[16px]">location_off</span>
+              </button>
+            )}
             <button onClick={handleRefresh} disabled={refreshing} className="text-primary hover:opacity-80 transition-opacity p-1">
               <span className={`material-symbols-outlined text-[20px] ${refreshing ? 'animate-spin' : ''}`}>refresh</span>
             </button>
@@ -422,6 +462,18 @@ export default function MessagesPage() {
             </button>
           </div>
         </div>
+
+        {/* 半径选择器 */}
+        {showRadiusPicker && (
+          <div className="flex gap-1.5 pb-3 flex-wrap">
+            {RADII.map((r) => (
+              <button key={r} onClick={() => { setRadius(r); setShowRadiusPicker(false) }}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${r === radius ? 'bg-primary text-white shadow-sm' : 'bg-surface-container-low text-on-surface-variant'}`}>
+                {r >= 1000 ? `${r / 1000}km` : `${r}m`}
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="flex flex-col gap-gutter">
           {filteredPosts.map((post) => {
@@ -443,7 +495,12 @@ export default function MessagesPage() {
                         <h4 className="font-label-md text-label-md font-bold truncate">{usr?.name || "用户"}</h4>
                         <span className="font-label-sm text-label-sm text-on-surface-variant/60 shrink-0 ml-2">{post.time}</span>
                       </div>
-                      <span className="text-[11px] text-on-surface-variant/50">{total} 条回复</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] text-on-surface-variant/50">{total} 条回复</span>
+                        {post.distance !== null && (
+                          <span className="text-[10px] text-primary/60">{formatDistance(post.distance)}</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <p className="font-body-md text-body-md">{post.message}</p>
@@ -551,9 +608,9 @@ export default function MessagesPage() {
           <div className="fixed inset-0 bg-black/30 z-40" onClick={applyFilter} />
           <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 px-6 pt-4 pb-12 shadow-xl">
             <div className="w-10 h-1 bg-surface-variant rounded-full mx-auto mb-4" />
-            <h3 className="font-label-md text-label-md text-center mb-6 text-on-surface">按时间筛选</h3>
+            <h3 className="font-label-md text-label-md text-center mb-6 text-on-surface">时间筛选</h3>
             <div className="mb-6">
-              <p className="font-label-sm text-label-sm text-on-surface mb-3">时间范围</p>
+              <p className="font-label-sm text-label-sm text-on-surface mb-3">显示时间范围</p>
               <div className="flex gap-2 flex-wrap">
                 {timeRanges.map((t) => (
                   <button key={t} onClick={() => { setFilterTime(t); setFilterDateValue(""); }}
