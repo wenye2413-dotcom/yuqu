@@ -7,7 +7,7 @@ import { useLocation, calcDistance, formatDistance } from "../hooks/useLocation"
 import Avatar from "../components/common/Avatar";
 
 const timeRanges = ["今天", "昨天", "本周", "本月"];
-const MIN_RADIUS = 50   // 最小 50 米
+const MIN_RADIUS = 0    // 最小 0 米
 const MAX_RADIUS = 10000 // 最大 10 公里
 
 /**
@@ -477,19 +477,31 @@ export default function MessagesPage() {
         {/* 半径滑块 */}
         {showRadiusPicker && (
           <div className="pb-3">
-            <div className="flex items-center gap-3 bg-surface-container-low rounded-xl px-4 py-3">
-              <span className="material-symbols-outlined text-primary text-[18px]">my_location</span>
-              <input type="range" min={MIN_RADIUS} max={MAX_RADIUS} step={10} value={radius}
-                onChange={(e) => setRadius(Number(e.target.value))}
-                onTouchStart={(e) => e.stopPropagation()}
-                onTouchMove={(e) => e.stopPropagation()}
-                className="flex-1 accent-primary h-1.5" />
-              <span className="text-xs font-semibold text-primary w-14 text-right">
-                {radius >= 1000 ? `${(radius / 1000).toFixed(1)}km` : `${radius}m`}
-              </span>
+            <div className="bg-surface-container-low rounded-xl px-4 py-3">
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-primary text-[18px]">my_location</span>
+                <input type="range" min={MIN_RADIUS} max={MAX_RADIUS} step={1} value={radius}
+                  onChange={(e) => setRadius(Number(e.target.value))}
+                  onTouchStart={(e) => e.stopPropagation()}
+                  onTouchMove={(e) => e.stopPropagation()}
+                  className="flex-1 accent-primary h-1.5" />
+              </div>
+              <div className="flex items-center justify-center gap-2 mt-2">
+                <input type="number" min={MIN_RADIUS} max={MAX_RADIUS} value={radius}
+                  onChange={(e) => {
+                    const v = Number(e.target.value)
+                    if (v >= MIN_RADIUS && v <= MAX_RADIUS) setRadius(v)
+                  }}
+                  className="w-20 text-center text-sm bg-white rounded-lg border border-outline-variant/30 py-1.5 outline-none" />
+                <span className="text-xs text-on-surface-variant">米</span>
+                <span className="text-xs text-on-surface-variant/50 mx-2">|</span>
+                <span className="text-xs font-semibold text-primary">
+                  {radius >= 1000 ? `${(radius / 1000).toFixed(2)}km` : `${radius}m`}
+                </span>
+              </div>
             </div>
             <div className="flex justify-between text-[10px] text-on-surface-variant/50 px-1 mt-1">
-              <span>50m</span><span>1km</span><span>5km</span><span>10km</span>
+              <span>0m</span><span>100m</span><span>1km</span><span>5km</span><span>10km</span>
             </div>
           </div>
         )}
@@ -509,9 +521,9 @@ export default function MessagesPage() {
                     <div onClick={(e) => { e.stopPropagation(); handleAvatarClick(post.userId); }} className="cursor-pointer shrink-0">
                       <Avatar name={usr?.avatar || "User"} size="w-10 h-10" />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-baseline">
-                        <h4 className="font-label-md text-label-md font-bold truncate">{usr?.name || "用户"}</h4>
+                    <div className="flex-1 min-w-0" onClick={(e) => { e.stopPropagation(); handleAvatarClick(post.userId); }}>
+                      <div className="flex justify-between items-baseline cursor-pointer">
+                        <h4 className="font-label-md text-label-md font-bold truncate hover:text-primary transition-colors">{usr?.name || "用户"}</h4>
                         <span className="font-label-sm text-label-sm text-on-surface-variant/60 shrink-0 ml-2">{post.time}</span>
                       </div>
                       <div className="flex items-center gap-2">
