@@ -7,19 +7,11 @@ import Avatar from "../components/common/Avatar";
 
 const timeRanges = ["今天", "昨天", "本周", "本月"];
 
-
-
 /**
- * 递归评论组件
- * - reply: 当前回复对象（含 children）
- * - postId: 顶层帖子 ID
- * - activeReplyId: 当前展开输入框的回复 ID
- * - replyTextMap: { [key]: string } 输入内容
+ * 递归评论组件（纯展示，回复走底部统一输入框）
  */
-function CommentThread({ reply, postId, profiles, currentUserId, onAvatarClick, activeReplyId, onToggleReply, replyTextMap, onReplyTextChange, onSend }) {
+function CommentThread({ reply, postId, profiles, currentUserId, onAvatarClick, onReply }) {
   const user = profiles[reply.userId] || { name: "用户", avatar: "User" };
-  const isInputOpen = activeReplyId === reply.id;
-  const inputText = replyTextMap[reply.id] || "";
   const children = reply.children || [];
 
   return (
@@ -35,34 +27,13 @@ function CommentThread({ reply, postId, profiles, currentUserId, onAvatarClick, 
           </div>
           <p className="text-sm text-on-surface">{reply.text}</p>
           <button
-            onClick={() => onToggleReply(postId, reply.id)}
+            onClick={() => onReply(reply)}
             className="text-[10px] text-primary mt-0.5 hover:opacity-70"
           >
-            {isInputOpen ? "取消回复" : "回复"}
+            回复
           </button>
         </div>
       </div>
-
-      {/* 展开的回复输入框 */}
-      {isInputOpen && (
-        <div className="ml-8 mb-2 flex items-center gap-2">
-          <div className="flex-1 flex items-center gap-2 bg-white rounded-full px-3 py-1.5 border border-outline-variant/30">
-            <span className="text-[10px] text-primary shrink-0">@{user?.name || "用户"}</span>
-            <textarea
-              value={inputText}
-              onChange={(e) => onReplyTextChange(reply.id, e.target.value)}
-              placeholder="写下回复..."
-              rows={1}
-              className="flex-1 bg-transparent border-none focus:ring-0 text-sm outline-none placeholder-on-surface-variant/50 resize-none overflow-hidden"
-              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onSend(postId, reply.id); } }}
-              autoFocus
-            />
-            <button onClick={() => onSend(postId, reply.id)} disabled={!inputText.trim()} className="text-primary disabled:opacity-30">
-              <span className="material-symbols-outlined text-[18px]">send</span>
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* 递归渲染子回复 */}
       {children.length > 0 && (
@@ -75,11 +46,7 @@ function CommentThread({ reply, postId, profiles, currentUserId, onAvatarClick, 
               profiles={profiles}
               currentUserId={currentUserId}
               onAvatarClick={onAvatarClick}
-              activeReplyId={activeReplyId}
-              onToggleReply={onToggleReply}
-              replyTextMap={replyTextMap}
-              onReplyTextChange={onReplyTextChange}
-              onSend={onSend}
+              onReply={onReply}
             />
           ))}
         </div>
@@ -100,10 +67,8 @@ export default function MessagesPage() {
 
   const [newPostIds, setNewPostIds] = useState([]);
 
-  // 回复输入内容: { [replyId]: text }
-  const [replyTextMap, setReplyTextMap] = useState({});
-  // 当前展开的回复输入框 ID: { postId, replyId }
-  const [activeReply, setActiveReply] = useState(null);
+  // 统一回复状态: { postId, replyId (null=直接回复帖子), userName }
+  const [replyingTo, setReplyingTo] = useState(null);
 
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [newMessage, setNewMessage] = useState("");
@@ -120,7 +85,6 @@ export default function MessagesPage() {
 
   const prevPostCountRef = useRef(0);
 
-  // 将 fetchPosts 和 fetchProfiles 提升为函数声明（hoisting），以便在 useEffect 中调用
   function fetchProfiles() {
     supabase.from("profiles").select("*").then(({ data }) => {
       if (data) {
@@ -224,7 +188,6 @@ export default function MessagesPage() {
     }
   }, [posts]);
 
-  // 监听键盘弹出高度：使用 window.visualViewport 动态计算
   useEffect(() => {
     const handleResize = () => {
       if (window.visualViewport) {
@@ -243,37 +206,73 @@ export default function MessagesPage() {
 
   const handleCardClick = (postId) => {
     setExpandedId(expandedId === postId ? null : postId);
-    setActiveReply(null);
   };
 
-  // 点击"回复"按钮 — 切换输入框
-  const handleToggleReply = (postId, replyId) => {
-    if (activeReply && activeReply.postId === postId && activeReply.replyId === replyId) {
-      setActiveReply(null);
+  // 点击"回复" — 设置到底部统一输入框
+  const handleReply = (postId, reply) => {
+    const userName = reply
+      ? (profiles[reply.userId]?.name || "用户")
+      : (profiles[posts.find(p => p.id === postId)?.userId]?.name || "用户");
+    setReplyingTo({ postId, replyId: reply ? reply.id : null, userName });
+    setExpandedId(postId);
+    // 聚焦到底部输入框
+    setTimeout(() => newMessageInputRef.current?.focus(), 100);
+  };
+
+  // 取消回复
+  const cancelReply = () => {
+    setReplyingTo(null);
+  };
+
+  // 统一发送：有 replyingTo 就走回复，否则走新帖
+  const handleSendNewMessage = async () => {
+    if (!newMessage.trim() || sendingNewMessage) return;
+
+    if (replyingTo) {
+      // 发送回复
+      setSendingNewMessage(true);
+      const { error } = await supabase.from("post_replies").insert({
+        post_id: replyingTo.postId,
+        content: newMessage.trim(),
+        user_id: user.id,
+        parent_id: replyingTo.replyId, // null=直接回复帖子，非null=嵌套回复
+      });
+      setSendingNewMessage(false);
+      if (error) {
+        console.error("回复失败:", error);
+        toast("回复失败: " + (error.message || "未知错误"), "error");
+        return;
+      }
+      setNewMessage("");
+      setReplyingTo(null);
+      await fetchPosts();
+      toast("回复成功", "success");
     } else {
-      setActiveReply({ postId, replyId });
+      // 发送新帖
+      setSendingNewMessage(true);
+      const { error } = await supabase.from("posts").insert({
+        content: newMessage.trim(),
+        user_id: user.id,
+      });
+      setSendingNewMessage(false);
+      if (error) {
+        console.error("发送消息失败:", error);
+        toast("发送失败", "error");
+        return;
+      }
+      setNewMessage("");
+      await fetchPosts();
+      await fetchProfiles();
+      toast("发送成功", "success");
     }
   };
 
-  // 发送回复（postId = 顶层帖子ID, parentReplyId = 被回复的那条ID）
-  const handleSendReply = async (postId, parentReplyId = null) => {
-    const text = (replyTextMap[parentReplyId] || "").trim();
-    if (!text) return;
-    const { error } = await supabase.from("post_replies").insert({
-      post_id: postId,
-      content: text,
-      user_id: user.id,
-      parent_id: parentReplyId, // null 表示直接回复帖子
-    });
-    if (error) {
-      console.error("回复失败:", error);
-      toast("回复失败: " + (error.message || "未知错误"), "error");
-      return;
-    }
-    setReplyTextMap((prev) => ({ ...prev, [parentReplyId]: "" }));
-    setActiveReply(null);
-    fetchPosts();
-    toast("回复成功", "success");
+  const handleNewMessageFocus = () => {
+    setTimeout(() => {
+      if (newMessageInputRef.current) {
+        newMessageInputRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 300);
   };
 
   const applyFilter = () => {
@@ -293,41 +292,11 @@ export default function MessagesPage() {
   const profileForPost = (p) => profiles[p.userId] || { name: "用户", avatar: "User" };
   const filteredPosts = posts;
 
-  // 计算树形总回复数
   const countAll = (list) => {
     let n = 0;
     const walk = (arr) => { arr.forEach((r) => { n++; walk(r.children || []); }); };
     walk(list);
     return n;
-  };
-
-  // 新增：发送新消息到 posts 表
-  const handleSendNewMessage = async () => {
-    if (!newMessage.trim() || sendingNewMessage) return;
-    setSendingNewMessage(true);
-    const { error } = await supabase.from("posts").insert({
-      content: newMessage.trim(),
-      user_id: user.id,
-    });
-    setSendingNewMessage(false);
-    if (error) {
-      console.error("发送消息失败:", error);
-      toast("发送失败", "error");
-      return;
-    }
-    setNewMessage("");
-    await fetchPosts();
-    await fetchProfiles();
-    toast("发送成功", "success");
-  };
-
-  // 新增：输入框聚焦时滚动到可视区域，防止键盘遮挡
-  const handleNewMessageFocus = () => {
-    setTimeout(() => {
-      if (newMessageInputRef.current) {
-        newMessageInputRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-    }, 300);
   };
 
   const safeBottom = keyboardHeight > 20 ? keyboardHeight : 0;
@@ -352,7 +321,6 @@ export default function MessagesPage() {
             const isExpanded = expandedId === post.id;
             const isNew = newPostIds.includes(post.id);
             const total = countAll(post.replies);
-            const postReplyText = replyTextMap["post-" + post.id] || "";
 
             return (
               <div key={post.id} className={`bg-white/80 backdrop-blur-xl rounded-lg shadow-sm overflow-hidden ${isNew ? "animate-arc-in" : ""}`}>
@@ -387,33 +355,19 @@ export default function MessagesPage() {
                             profiles={profiles}
                             currentUserId={user?.id}
                             onAvatarClick={handleAvatarClick}
-                            activeReplyId={activeReply?.replyId || null}
-                            onToggleReply={handleToggleReply}
-                            replyTextMap={replyTextMap}
-                            onReplyTextChange={(id, val) => setReplyTextMap((prev) => ({ ...prev, [id]: val }))}
-                            onSend={handleSendReply}
+                            onReply={(r) => handleReply(post.id, r)}
                           />
                         ))}
                       </div>
                     )}
 
-                    {/* 直接回复帖子的输入框 */}
-                    <div className="flex items-center gap-2">
-                      <Avatar name={profiles[user?.id]?.avatar || "User"} size="w-6 h-6" />
-                      <div className="flex-1 flex items-center gap-2 bg-white rounded-full px-3 py-1.5 border border-outline-variant/30">
-                        <textarea
-                          value={postReplyText}
-                          onChange={(e) => setReplyTextMap((prev) => ({ ...prev, ["post-" + post.id]: e.target.value }))}
-                          placeholder="写下你的公开回复..."
-                          rows={1}
-                          className="flex-1 bg-transparent border-none focus:ring-0 text-sm outline-none placeholder-on-surface-variant/50 resize-none overflow-hidden"
-                          onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendReply(post.id, null); } }}
-                        />
-                        <button onClick={() => handleSendReply(post.id, null)} disabled={!postReplyText.trim()} className="text-primary disabled:opacity-30">
-                          <span className="material-symbols-outlined text-[18px]">send</span>
-                        </button>
-                      </div>
-                    </div>
+                    {/* 回复帖子的入口 */}
+                    <button
+                      onClick={() => handleReply(post.id, null)}
+                      className="text-xs text-primary/70 hover:opacity-70 mt-1"
+                    >
+                      {post.replies.length === 0 ? "写下第一条回复..." : "回复帖子"}
+                    </button>
                   </div>
                 )}
               </div>
@@ -426,47 +380,43 @@ export default function MessagesPage() {
         <div className="h-28" />
       </div>
 
-      {/* 底部输入框 + 发送按钮（fixed 定位在 BottomNav 上方，紧挨底部导航栏） */}
-      <div className="fixed bottom-[80px] left-0 right-0 z-[60] bg-white border-t border-surface-variant/20 flex items-center gap-2 px-4 py-3 shadow-[0_-2px_8px_rgba(0,0,0,0.06)]"
+      {/* 底部统一输入框 */}
+      <div className="fixed bottom-[80px] left-0 right-0 z-[60] bg-white border-t border-surface-variant/20 px-4 py-3 shadow-[0_-2px_8px_rgba(0,0,0,0.06)]"
         style={{ paddingBottom: keyboardHeight > 20 ? `calc(0.75rem + ${keyboardHeight}px)` : "0.75rem" }}>
-        <input
-          ref={newMessageInputRef}
-          type="text"
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          placeholder="输入新消息..."
-          autoComplete="off"
-          className="flex-1 bg-surface-container-low rounded-full px-4 py-2.5 text-sm outline-none border-none"
-          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleSendNewMessage(); } }}
-          onFocus={handleNewMessageFocus}
-          onTouchStart={() => {
-            if (newMessageInputRef.current && document.activeElement !== newMessageInputRef.current) {
-              newMessageInputRef.current.focus();
-            }
-          }}
-          onClick={() => {
-            if (newMessageInputRef.current) {
-              newMessageInputRef.current.focus();
-              if (newMessageInputRef.current.setSelectionRange) {
-                newMessageInputRef.current.setSelectionRange(
-                  newMessageInputRef.current.value.length,
-                  newMessageInputRef.current.value.length
-                );
-              }
-            }
-          }}
-        />
-        <button
-          ref={newMessageBtnRef}
-          onClick={handleSendNewMessage}
-          disabled={!newMessage.trim() || sendingNewMessage}
-          className="w-9 h-9 flex items-center justify-center bg-[#95490d] text-white rounded-full disabled:opacity-40 shrink-0 transition-all active:scale-90"
-        >
-          <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>send</span>
-        </button>
+        <div className="flex items-center gap-2">
+          {/* 回复上下文提示 */}
+          {replyingTo && (
+            <div className="flex items-center gap-1 shrink-0 max-w-[120px]">
+              <span className="text-[10px] text-on-surface-variant/60 bg-surface-container-low px-2 py-1 rounded-full truncate">
+                回复 @{replyingTo.userName}
+              </span>
+              <button onClick={cancelReply} className="text-on-surface-variant/40 hover:text-on-surface-variant">
+                <span className="material-symbols-outlined text-[14px]">close</span>
+              </button>
+            </div>
+          )}
+          <input
+            ref={newMessageInputRef}
+            type="text"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder={replyingTo ? `回复 @${replyingTo.userName}...` : "输入新消息..."}
+            autoComplete="off"
+            className="flex-1 bg-surface-container-low rounded-full px-4 py-2.5 text-sm outline-none border-none"
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleSendNewMessage(); } }}
+            onFocus={handleNewMessageFocus}
+          />
+          <button
+            ref={newMessageBtnRef}
+            onClick={handleSendNewMessage}
+            disabled={!newMessage.trim() || sendingNewMessage}
+            className="w-9 h-9 flex items-center justify-center bg-[#95490d] text-white rounded-full disabled:opacity-40 shrink-0 transition-all active:scale-90"
+          >
+            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>send</span>
+          </button>
+        </div>
       </div>
 
-      {/* 底部占位，防止内容被 BottomNav 遮挡 */}
       <div className="shrink-0 h-20" />
 
       <button onClick={() => setFabOpen(true)}
