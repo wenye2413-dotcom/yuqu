@@ -666,12 +666,6 @@ export default function MessagesPage() {
 
       <div className="shrink-0 h-20" />
 
-      <button onClick={() => setFabOpen(true)}
-        className="fixed right-4 z-[70] w-14 h-14 bg-primary text-white rounded-full shadow-[0_8px_24px_rgba(149,73,13,0.3)] flex items-center justify-center hover:scale-105 active:scale-95 transition-all"
-        style={{ bottom: safeBottom > 20 ? safeBottom + 16 : 152 }}>
-        <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>add</span>
-      </button>
-
       {filterOpen && (
         <>
           <div className="fixed inset-0 bg-black/30 z-40" onClick={applyFilter} />
