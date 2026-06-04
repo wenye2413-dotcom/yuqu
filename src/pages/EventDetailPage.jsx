@@ -4,6 +4,7 @@ import { supabase } from "../supabaseClient";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../hooks/useToast";
 import Avatar from "../components/common/Avatar";
+import { getGradientBg } from "../hooks/utils";
 
 export default function EventDetailPage() {
   const { eventId } = useParams();
@@ -13,8 +14,8 @@ export default function EventDetailPage() {
   const [event, setEvent] = useState(null);
   const [host, setHost] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [myReg, setMyReg] = useState(null);    // 当前用户的报名状态
-  const [regs, setRegs] = useState([]);          // 报名列表（主办方可见）
+  const [myReg, setMyReg] = useState(null);
+  const [regs, setRegs] = useState([]);
   const isHost = event?.user_id === user?.id;
 
   useEffect(() => {
@@ -25,11 +26,9 @@ export default function EventDetailPage() {
       supabase.from("profiles").select("name").eq("id", data.user_id).single().then(({ data: p }) => {
         if (p) setHost(p);
       });
-      // 当前用户报名状态
       supabase.from("event_registrations").select("*").eq("event_id", eventId).eq("user_id", user?.id).maybeSingle().then(({ data: r }) => {
         if (r) setMyReg(r);
       });
-      // 主办方查看报名列表
       if (user?.id === data.user_id) {
         supabase.from("event_registrations").select("*").eq("event_id", eventId).order("created_at", { ascending: false }).then(({ data: list }) => {
           if (list) setRegs(list);
@@ -40,19 +39,19 @@ export default function EventDetailPage() {
   }, [eventId, user?.id]);
 
   const handleJoin = async () => {
-    if (isHost) { toast("你是活动主办方", "info"); return }
+    if (isHost) { toast("你是活动组织者", "info"); return }
     const { error } = await supabase.from("event_registrations").insert({
       event_id: eventId, user_id: user.id, status: 'pending',
     });
     if (error) { toast("报名失败: " + error.message, "error"); return }
     setMyReg({ status: 'pending' });
-    toast("已报名，等待主办方审核", "success");
+    toast("✅ 已报名，等待主办方确认", "success");
   };
 
   const handleApprove = async (regId) => {
     await supabase.from("event_registrations").update({ status: 'approved' }).eq("id", regId);
     setRegs(prev => prev.map(r => r.id === regId ? { ...r, status: 'approved' } : r));
-    toast("已通过", "success");
+    toast("已通过 ✅", "success");
   };
 
   const handleReject = async (regId) => {
@@ -60,79 +59,136 @@ export default function EventDetailPage() {
     setRegs(prev => prev.map(r => r.id === regId ? { ...r, status: 'rejected' } : r));
   };
 
-  if (loading) return <main className="p-margin-mobile text-center text-on-surface-variant py-20">加载中...</main>;
-  if (!event) return <main className="p-margin-mobile text-center text-on-surface-variant py-20">活动不存在</main>;
+  if (loading) return (
+    <main className="min-h-screen flex items-center justify-center bg-background">
+      <div className="animate-spin rounded-full w-8 h-8 border-2 border-primary border-t-transparent" />
+    </main>
+  );
 
-  const eventDate = event.event_time ? new Date(event.event_time).toLocaleString("zh-CN", { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : "";
+  if (!event) return (
+    <main className="min-h-screen flex flex-col items-center justify-center bg-background gap-4 px-margin-mobile">
+      <span className="material-symbols-outlined text-5xl text-on-surface-variant/30">event_busy</span>
+      <p className="text-on-surface-variant">活动不存在或已删除</p>
+      <button onClick={() => navigate(-1)} className="text-sm text-primary">返回</button>
+    </main>
+  );
+
+  const eventDate = event.event_time ? new Date(event.event_time).toLocaleString("zh-CN", {
+    month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', weekday: 'short'
+  }) : "";
+  const pendingRegs = regs.filter(r => r.status === 'pending');
 
   return (
-    <main className="pb-8">
-      <div className="px-margin-mobile py-3 flex items-center gap-2">
-        <button onClick={() => navigate(-1)} className="w-8 h-8 flex items-center justify-center">
-          <span className="material-symbols-outlined">arrow_back</span>
+    <main className="min-h-screen bg-background pb-8">
+      {/* 顶部渐变图 */}
+      <div className="h-40 relative" style={{ background: getGradientBg(event.title) }}>
+        <button onClick={() => navigate(-1)}
+          className="absolute top-12 left-4 w-9 h-9 bg-white/20 backdrop-blur rounded-full flex items-center justify-center shadow-sm">
+          <span className="material-symbols-outlined text-white text-[20px]">arrow_back</span>
         </button>
       </div>
-      <div className="px-margin-mobile">
-        <h1 className="font-headline-xl text-headline-xl text-on-surface mb-2">{event.title}</h1>
-        <div className="flex items-center gap-2 mb-3 text-sm text-on-surface-variant">
-          <span className="material-symbols-outlined text-[16px]">schedule</span>
-          <span>{eventDate}</span>
+
+      <div className="px-margin-mobile -mt-6 relative">
+        {/* 标题卡片 */}
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-white/40 p-5 mb-4">
+          <h1 className="font-headline-xl text-headline-xl text-on-surface mb-3">{event.title}</h1>
+          <div className="space-y-2.5">
+            <div className="flex items-center gap-3 text-sm text-on-surface-variant">
+              <span className="w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center">
+                <span className="material-symbols-outlined text-[16px] text-secondary">schedule</span>
+              </span>
+              <span>{eventDate || "时间待定"}</span>
+            </div>
+            <div className="flex items-center gap-3 text-sm text-on-surface-variant">
+              <span className="w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center">
+                <span className="material-symbols-outlined text-[16px] text-secondary">location_on</span>
+              </span>
+              <span>{event.location || "地点待定"}</span>
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-2 mb-4 text-sm text-on-surface-variant">
-          <span className="material-symbols-outlined text-[16px]">location_on</span>
-          <span>{event.location || "待定"}</span>
-        </div>
+
+        {/* 组织者 */}
         {host && (
-          <div className="flex items-center gap-3 mb-4 bg-surface-container-low rounded-xl p-3">
-            <Avatar name={event.user_id || 'U'} size="w-10 h-10" />
+          <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-white/40 p-4 mb-4 flex items-center gap-3">
+            <Avatar name={event.user_id || 'U'} size="w-12 h-12" />
             <div>
-              <p className="text-sm font-semibold text-on-surface">{host.name || "用户"}</p>
-              <p className="text-xs text-on-surface-variant">活动组织者</p>
+              <p className="font-semibold text-sm text-on-surface">{host.name || "用户"}</p>
+              <p className="text-xs text-on-surface-variant/60">活动组织者</p>
             </div>
           </div>
         )}
-        <div className="mb-6">
-          <h3 className="font-label-md text-label-md text-on-surface mb-2">活动详情</h3>
+
+        {/* 活动详情 */}
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-white/40 p-5 mb-4">
+          <h3 className="font-label-md text-label-md text-on-surface mb-3 flex items-center gap-2">
+            <span className="material-symbols-outlined text-[18px] text-primary">description</span>
+            活动详情
+          </h3>
           <p className="text-sm text-on-surface-variant leading-relaxed whitespace-pre-wrap">{event.description}</p>
         </div>
 
         {/* 操作按钮 */}
         {isHost ? (
-          <div className="bg-primary/5 rounded-xl p-4 text-center text-sm text-on-surface-variant">
-            你是此活动的组织者
+          <div className="bg-primary/5 backdrop-blur rounded-2xl p-5 text-center border border-primary/10">
+            <p className="text-sm font-semibold text-primary mb-1">你是此活动的组织者</p>
+            <p className="text-xs text-on-surface-variant/60">你可以在下方审核报名申请</p>
           </div>
         ) : myReg ? (
-          <div className={`rounded-xl p-4 text-center text-sm ${myReg.status === 'approved' ? 'bg-bamboo-50 text-bamboo-700' : myReg.status === 'rejected' ? 'bg-red-50 text-red-600' : 'bg-secondary/10 text-secondary'}`}>
-            {myReg.status === 'approved' ? '✅ 报名已通过' : myReg.status === 'rejected' ? '❌ 报名未通过' : '⏳ 等待主办方审核'}
+          <div className={`rounded-2xl p-5 text-center border backdrop-blur ${
+            myReg.status === 'approved' ? 'bg-bamboo-50/80 border-bamboo-200' :
+            myReg.status === 'rejected' ? 'bg-red-50/80 border-red-200' :
+            'bg-secondary/10 border-secondary/20'
+          }`}>
+            <span className="text-2xl block mb-2">
+              {myReg.status === 'approved' ? '🎉' : myReg.status === 'rejected' ? '😢' : '⏳'}
+            </span>
+            <p className="text-sm font-semibold text-on-surface">
+              {myReg.status === 'approved' ? '报名已通过' : myReg.status === 'rejected' ? '报名未通过' : '等待主办方确认'}
+            </p>
           </div>
         ) : (
           <button onClick={handleJoin}
-            className="w-full py-3.5 bg-primary text-white font-label-md text-label-md rounded-full shadow-lg active:scale-95 transition-transform">
+            className="w-full py-4 bg-primary text-white font-label-md text-label-md rounded-2xl shadow-lg shadow-primary/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+            <span className="material-symbols-outlined text-[20px]">how_to_reg</span>
             报名参加
           </button>
         )}
 
-        {/* 主办方审核列表 */}
+        {/* 审核列表 */}
         {isHost && regs.length > 0 && (
-          <div className="mt-8">
-            <h3 className="font-label-md text-label-md text-on-surface mb-3">报名申请（{regs.length}）</h3>
+          <div className="mt-6">
+            <h3 className="font-label-md text-label-md text-on-surface mb-3 flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px] text-primary">group</span>
+              报名申请
+              {pendingRegs.length > 0 && (
+                <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">{pendingRegs.length} 待处理</span>
+              )}
+            </h3>
             <div className="space-y-2">
               {regs.map(reg => (
-                <div key={reg.id} className="flex items-center justify-between bg-surface-container-low rounded-xl px-4 py-3">
+                <div key={reg.id} className="bg-white/80 backdrop-blur-xl rounded-xl px-4 py-3 shadow-sm border border-white/40 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Avatar name={reg.user_id} size="w-8 h-8" />
-                    <span className="text-sm text-on-surface">{reg.user_id?.substring(0, 8)}...</span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${
-                      reg.status === 'approved' ? 'bg-bamboo-50 text-bamboo-700' :
-                      reg.status === 'rejected' ? 'bg-red-50 text-red-600' :
-                      'bg-secondary/10 text-secondary'
-                    }`}>{reg.status === 'pending' ? '待审核' : reg.status === 'approved' ? '已通过' : '已拒绝'}</span>
+                    <Avatar name={reg.user_id} size="w-9 h-9" />
+                    <div>
+                      <p className="text-sm font-medium text-on-surface">{reg.user_id.substring(0, 8)}...</p>
+                      <p className={`text-xs ${reg.status === 'approved' ? 'text-bamboo-600' : reg.status === 'rejected' ? 'text-red-400' : 'text-secondary'}`}>
+                        {reg.status === 'pending' ? '待审核' : reg.status === 'approved' ? '已通过' : '已拒绝'}
+                      </p>
+                    </div>
                   </div>
                   {reg.status === 'pending' && (
                     <div className="flex gap-2">
-                      <button onClick={() => handleApprove(reg.id)} className="text-xs px-3 py-1.5 bg-bamboo-500 text-white rounded-full">通过</button>
-                      <button onClick={() => handleReject(reg.id)} className="text-xs px-3 py-1.5 bg-red-400 text-white rounded-full">拒绝</button>
+                      <button onClick={() => handleApprove(reg.id)}
+                        className="text-xs px-4 py-1.5 bg-bamboo-500 text-white rounded-full font-medium active:scale-95 transition-all">通过</button>
+                      <button onClick={() => handleReject(reg.id)}
+                        className="text-xs px-4 py-1.5 bg-red-400 text-white rounded-full font-medium active:scale-95 transition-all">拒绝</button>
                     </div>
+                  )}
+                  {reg.status !== 'pending' && (
+                    <span className={`text-xs px-3 py-1 rounded-full ${
+                      reg.status === 'approved' ? 'bg-bamboo-50 text-bamboo-600' : 'bg-red-50 text-red-400'
+                    }`}>{reg.status === 'approved' ? '已通过' : '已拒绝'}</span>
                   )}
                 </div>
               ))}

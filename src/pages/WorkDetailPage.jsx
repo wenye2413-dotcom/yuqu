@@ -2,13 +2,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
 import { useAuth } from "../context/AuthContext";
-import { useToast } from "../hooks/useToast";
 import Avatar from "../components/common/Avatar";
+import { getGradientBg } from "../hooks/utils";
 
 export default function WorkDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const toast = useToast();
   const { user } = useAuth();
   const [work, setWork] = useState(null);
   const [creator, setCreator] = useState(null);
@@ -25,40 +24,55 @@ export default function WorkDetailPage() {
     });
   }, [id]);
 
-  if (loading) return <main className="p-margin-mobile text-center py-20 text-on-surface-variant">加载中...</main>;
-  if (!work) return <main className="p-margin-mobile text-center py-20">
-    <p className="text-on-surface-variant">作品不存在</p>
-    <button onClick={() => navigate(-1)} className="text-primary mt-4">返回</button>
-  </main>;
+  if (loading) return (
+    <main className="min-h-screen flex items-center justify-center bg-background">
+      <div className="animate-spin rounded-full w-8 h-8 border-2 border-primary border-t-transparent" />
+    </main>
+  );
+
+  if (!work) return (
+    <main className="min-h-screen flex flex-col items-center justify-center bg-background gap-4 px-margin-mobile">
+      <span className="material-symbols-outlined text-5xl text-on-surface-variant/30">broken_image</span>
+      <p className="text-on-surface-variant">作品不存在</p>
+      <button onClick={() => navigate(-1)} className="text-sm text-primary">返回</button>
+    </main>
+  );
 
   const isOwner = work.user_id === user?.id;
 
   return (
-    <main className="pb-8">
-      <div className="px-margin-mobile py-3 flex items-center gap-2">
-        <button onClick={() => navigate(-1)} className="w-8 h-8 flex items-center justify-center">
-          <span className="material-symbols-outlined">arrow_back</span>
+    <main className="min-h-screen bg-background pb-8">
+      <div className="h-48 relative" style={{ background: getGradientBg(work.title) }}>
+        <button onClick={() => navigate(-1)}
+          className="absolute top-12 left-4 w-9 h-9 bg-white/20 backdrop-blur rounded-full flex items-center justify-center shadow-sm">
+          <span className="material-symbols-outlined text-white text-[20px]">arrow_back</span>
         </button>
       </div>
 
-      <div className="px-margin-mobile">
+      <div className="px-margin-mobile -mt-6 relative">
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-white/40 p-5 mb-4">
+          <h1 className="font-headline-xl text-headline-xl text-on-surface mb-1">{work.title}</h1>
+          {work.price > 0 && (
+            <div className="inline-block bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-semibold mb-3">
+              ¥{work.price}
+            </div>
+          )}
+          <p className="text-sm text-on-surface-variant leading-relaxed whitespace-pre-wrap mt-3">{work.description}</p>
+        </div>
+
         {creator && (
-          <div className="flex items-center gap-3 mb-4">
+          <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-white/40 p-4 flex items-center gap-3">
             <Avatar name={work.user_id || 'U'} size="w-12 h-12" />
             <div>
               <p className="font-semibold text-sm text-on-surface">{creator.name || "用户"}</p>
-              <p className="text-xs text-on-surface-variant">创作者</p>
+              <p className="text-xs text-on-surface-variant/60">创作者</p>
             </div>
           </div>
         )}
 
-        <h1 className="font-headline-xl text-headline-xl text-on-surface mb-2">{work.title}</h1>
-        {work.price > 0 && <p className="text-lg font-bold text-primary mb-3">¥{work.price}</p>}
-        <p className="text-sm text-on-surface-variant leading-relaxed whitespace-pre-wrap">{work.description}</p>
-
         {isOwner && (
-          <div className="mt-6 bg-primary/5 rounded-xl p-4 text-center text-sm text-on-surface-variant">
-            这是你的作品
+          <div className="mt-4 bg-primary/5 backdrop-blur rounded-2xl p-5 text-center border border-primary/10">
+            <p className="text-sm font-semibold text-primary">这是你的作品</p>
           </div>
         )}
       </div>
