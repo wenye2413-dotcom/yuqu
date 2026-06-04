@@ -1,4 +1,3 @@
-// 用名字生成固定颜色
 const COLORS = [
   ['#ff9d5c', '#95490d'],
   ['#b9ecee', '#356668'],
@@ -37,14 +36,17 @@ export function getGradientBg(name) {
 }
 
 export default function Avatar({ name, src, size = "w-10 h-10", className = "", onClick }) {
-  const inner = (
+  // 有 src 就显示上传的图片，没有就显示 CSS 首字母
+  const inner = src ? (
+    <img src={src} alt="" className="w-full h-full object-cover" />
+  ) : (
     <div className="w-full h-full flex items-center justify-center text-white font-bold text-lg select-none"
       style={{ background: getGradientBg(name) }}>
       {(name || 'U')[0].toUpperCase()}
     </div>
   )
 
-  const cls = `rounded-full overflow-hidden flex-shrink-0 ${size} ${className}`
+  const cls = `rounded-full overflow-hidden flex-shrink-0 bg-surface-variant ${size} ${className}`
 
   if (onClick) {
     return <button onClick={onClick} className={`${cls} cursor-pointer`}>{inner}</button>

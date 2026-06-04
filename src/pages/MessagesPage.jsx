@@ -666,6 +666,30 @@ export default function MessagesPage() {
 
       <div className="shrink-0 h-20" />
 
+      {/* FAB — 发图片 */}
+      <button onClick={async () => {
+        const input = document.createElement('input')
+        input.type = 'file'
+        input.accept = 'image/*'
+        input.onchange = async (e) => {
+          const file = e.target.files?.[0]
+          if (!file) return
+          const ext = file.name.split('.').pop()
+          const path = `post_images/${user.id}/${Date.now()}.${ext}`
+          const { error } = await supabase.storage.from('images').upload(path, file)
+          if (error) { toast('上传失败: ' + error.message, 'error'); return }
+          const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(path)
+          // 把图片 URL 当作消息内容发送
+          setNewMessage(`![](${publicUrl})`)
+          setTimeout(() => handleSendNewMessage(), 100)
+        }
+        input.click()
+      }}
+        className="fixed right-4 z-[70] w-14 h-14 bg-primary text-white rounded-full shadow-[0_8px_24px_rgba(149,73,13,0.3)] flex items-center justify-center hover:scale-105 active:scale-95 transition-all"
+        style={{ bottom: 168 }}>
+        <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>add_a_photo</span>
+      </button>
+
       {filterOpen && (
         <>
           <div className="fixed inset-0 bg-black/30 z-40" onClick={applyFilter} />

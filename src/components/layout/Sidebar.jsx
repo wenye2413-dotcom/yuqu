@@ -47,7 +47,7 @@ export default function Sidebar({ open, onClose }) {
             {/* 用户信息 */}
             <div className="bg-gradient-to-br from-primary/10 to-secondary/10 px-5 pt-12 pb-6">
               <div className="flex items-center gap-3 mb-3">
-                <Avatar name={user?.id || 'U'} size="w-14 h-14" />
+                <Avatar name={user?.id || 'U'} src={profile?.avatar_url} size="w-14 h-14" />
                 <div>
                   <p className="font-bold text-base text-on-surface">{profile?.name || user?.email?.split('@')[0] || '用户'}</p>
                   <p className="text-xs text-on-surface-variant/70 truncate max-w-[180px]">{user?.email || ''}</p>

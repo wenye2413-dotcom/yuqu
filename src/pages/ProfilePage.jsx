@@ -110,7 +110,7 @@ export default function ProfilePage() {
         <div className="px-margin-mobile">
           <div className="flex items-end -mt-12 mb-3">
             <div className="relative cursor-pointer group" onClick={() => fileRef.current?.click()}>
-              <Avatar name={user?.id || 'U'} size="w-24 h-24" className="border-4 border-white shadow-xl" />
+              <Avatar name={user?.id || 'U'} src={profile?.avatar_url} size="w-24 h-24" className="border-4 border-white shadow-xl" />
               <div className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                 <span className="material-symbols-outlined text-white opacity-0 group-hover:opacity-100 text-[24px] transition-opacity">camera_alt</span>
               </div>
@@ -124,16 +124,8 @@ export default function ProfilePage() {
           </div>
 
           {/* 统计（可点击） */}
-          <div className="bg-white/80 backdrop-blur-xl rounded-xl shadow-sm border border-white/40 flex mb-4 overflow-hidden">
-            <div className="flex-1 py-3 text-center border-r border-outline-variant/20">
-              <p className="font-bold text-headline-lg-mobile text-on-surface">{myWorks.length}</p>
-              <p className="text-[10px] text-on-surface-variant/60">作品</p>
-            </div>
-            <div className="flex-1 py-3 text-center border-r border-outline-variant/20">
-              <p className="font-bold text-headline-lg-mobile text-on-surface">{myEvents.length}</p>
-              <p className="text-[10px] text-on-surface-variant/60">活动</p>
-            </div>
-            <div onClick={() => navigate('/followers')} className="flex-1 py-3 text-center border-r border-outline-variant/20 cursor-pointer active:bg-surface-container-low transition-colors">
+          <div className="card flex mb-4 overflow-hidden">
+            <div onClick={() => navigate('/followers')} className="flex-1 py-3 text-center border-r border-[#f0edea] cursor-pointer active:bg-surface-container-low transition-colors">
               <p className="font-bold text-headline-lg-mobile text-on-surface">{followerCount}</p>
               <p className="text-[10px] text-on-surface-variant/60">关注者</p>
             </div>
