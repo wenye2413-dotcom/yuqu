@@ -81,7 +81,7 @@ export default function NotificationsPage() {
           {notifs.map((n) => (
             <div key={n.id} onClick={() => navigate(`/messages`)}
               className={`flex items-start gap-3 px-3 py-3 rounded-xl cursor-pointer active:scale-[0.98] transition-all ${!n.read ? 'bg-primary/5' : ''}`}>
-              <Avatar name={getActorName(n.actor_id)} size="w-10 h-10" />
+              <Avatar name={n.actor_id || 'U'} size="w-10 h-10" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-on-surface">
                   <span className="font-semibold">{getActorName(n.actor_id)}</span>

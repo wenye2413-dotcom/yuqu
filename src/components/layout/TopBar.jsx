@@ -71,7 +71,7 @@ export default function TopBar() {
           onClick={() => setSidebarOpen(true)}
           className="flex items-center hover:bg-surface-container-low/50 rounded-full p-1 cursor-pointer relative"
         >
-          <Avatar name={profile?.name || user?.email || "User"} size="w-8 h-8" />
+          <Avatar name={user?.id || "User"} size="w-8 h-8" />
           {notifCount > 0 && (
             <span className="absolute -top-0.5 -right-0.5 bg-error text-white text-[10px] font-bold min-w-[16px] h-4 flex items-center justify-center rounded-full px-1 shadow">
               {notifCount > 99 ? '99+' : notifCount}
