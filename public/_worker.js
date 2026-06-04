@@ -1,12 +1,13 @@
-// Cloudflare Pages _worker.js — 同域名 Supabase 代理
+// Cloudflare Pages _worker.js — 同域名 Supabase 代理（含 WebSocket）
 const SUPABASE_HOST = 'rczqlxxveukukuuwluzg.supabase.co'
 
 // 需要代理的路径前缀
-const PROXY_PREFIXES = ['/auth/', '/rest/', '/storage/']
+const PROXY_PREFIXES = ['/auth/', '/rest/', '/storage/', '/realtime/']
 
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url)
+    const isWebSocket = request.headers.get('Upgrade')?.toLowerCase() === 'websocket'
 
     // 判断是否需要代理到 Supabase
     const shouldProxy = PROXY_PREFIXES.some((p) => url.pathname.startsWith(p))
