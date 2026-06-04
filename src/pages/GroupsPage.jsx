@@ -451,19 +451,16 @@ export default function GroupsPage() {
             <div className="w-10 h-1 bg-surface-variant rounded-full mx-auto mb-4" />
             {!createType ? (
               <>
-                <h3 className="font-label-md text-label-md text-center mb-6 text-on-surface">创建</h3>
-                <div className="space-y-3">
-                  <button onClick={() => setCreateType('community')}
-                    className="w-full flex items-center gap-4 px-4 py-4 bg-surface-container-low/50 rounded-xl text-left active:scale-[0.98] transition-transform">
-                    <span className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-[20px]">🏘️</span>
-                    <div><p className="font-label-md text-label-md text-on-surface">创建社区</p><p className="text-xs text-on-surface-variant">基于城市或区域的社区</p></div>
-                  </button>
-                  <button onClick={() => setCreateType('group')}
-                    className="w-full flex items-center gap-4 px-4 py-4 bg-surface-container-low/50 rounded-xl text-left active:scale-[0.98] transition-transform">
-                    <span className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-[20px]">👥</span>
-                    <div><p className="font-label-md text-label-md text-on-surface">创建群组</p><p className="text-xs text-on-surface-variant">基于兴趣或活动的群组</p></div>
-                  </button>
-                </div>
+                <h3 className="font-label-md text-label-md text-center mb-6 text-on-surface">创建群组</h3>
+                <p className="text-xs text-on-surface-variant/60 text-center -mt-4 mb-4">和志同道合的人一起玩</p>
+                <button onClick={() => setCreateType('group')}
+                  className="w-full flex items-center gap-4 px-4 py-4 bg-surface-container-low/50 rounded-xl text-left active:scale-[0.98] transition-transform mb-3">
+                  <span className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-[20px]">👥</span>
+                  <div><p className="font-label-md text-label-md text-on-surface">创建兴趣群组</p><p className="text-xs text-on-surface-variant">爬山、K歌、游戏、运动...</p></div>
+                </button>
+                <button onClick={() => setCreateOpen(false)} className="w-full py-3 text-sm text-on-surface-variant/60 active:scale-95 transition-all">
+                  取消
+                </button>
               </>
             ) : (
               <>
@@ -471,21 +468,21 @@ export default function GroupsPage() {
                   <button onClick={() => setCreateType(null)} className="text-on-surface-variant">
                     <span className="material-symbols-outlined">arrow_back</span>
                   </button>
-                  <h3 className="font-label-md text-label-md text-on-surface">创建{createType === 'community' ? '社区' : '群组'}</h3>
+                  <h3 className="font-label-md text-label-md text-on-surface">创建群组</h3>
                 </div>
                 <div className="space-y-4">
                   <input type="text" value={createName} onChange={(e) => setCreateName(e.target.value)}
-                    placeholder={createType === 'community' ? '社区名称（如：北京朝阳区）' : '群组名称'} className="w-full bg-surface-container-low rounded-xl px-4 py-3 text-sm outline-none border border-outline-variant/30" />
+                    placeholder="群组名称（如：周末爬山群）" className="w-full bg-white rounded-xl px-4 py-3.5 text-sm outline-none border border-[#f0edea] focus:border-primary/30 transition-colors" />
                   <textarea value={createDesc} onChange={(e) => setCreateDesc(e.target.value)}
-                    placeholder={createType === 'community' ? '社区简介（选填）' : '群组简介（选填）'} rows={3}
-                    className="w-full bg-surface-container-low rounded-xl px-4 py-3 text-sm outline-none border border-outline-variant/30 resize-none" />
+                    placeholder="群组简介（选填）" rows={3}
+                    className="w-full bg-white rounded-xl px-4 py-3.5 text-sm outline-none border border-[#f0edea] focus:border-primary/30 transition-colors resize-none" />
                   <label className="flex items-center gap-3 text-sm text-on-surface">
                     <input type="checkbox" checked={createPublic} onChange={(e) => setCreatePublic(e.target.checked)} className="accent-primary w-4 h-4" />
-                    公开{createType === 'community' ? '社区' : '群组'}
+                    公开群组
                   </label>
                   <button onClick={handleCreate} disabled={creating || !createName.trim()}
-                    className="w-full py-3.5 bg-primary text-white font-label-md rounded-full disabled:opacity-40 active:scale-95 transition-transform">
-                    {creating ? "创建中..." : `创建${createType === 'community' ? '社区' : '群组'}`}
+                    className="w-full py-3.5 bg-[#95490d] text-white rounded-full text-sm font-medium disabled:opacity-40 active:scale-95 transition-all">
+                    {creating ? "创建中..." : "创建群组"}
                   </button>
                 </div>
               </>
