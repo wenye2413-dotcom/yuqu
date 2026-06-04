@@ -1,3 +1,5 @@
+import { useState } from "react"
+
 const COLORS = [
   ['#ff9d5c', '#95490d'],
   ['#b9ecee', '#356668'],
@@ -36,21 +38,24 @@ export function getGradientBg(name) {
 }
 
 export default function Avatar({ name, src, size = "w-10 h-10", className = "", onClick }) {
-  // 有 src 就显示上传的图片，没有就显示 CSS 首字母
-  const inner = src ? (
-    <img src={src} alt="" className="w-full h-full object-cover" />
-  ) : (
+  const [imgError, setImgError] = useState(false)
+
+  // 有 src 且没有加载失败 → 显示图片
+  if (src && !imgError) {
+    const img = <img src={src} alt="" onError={() => setImgError(true)} className="w-full h-full object-cover" />
+    const cls = `rounded-full overflow-hidden flex-shrink-0 bg-surface-variant ${size} ${className}`
+    if (onClick) return <button onClick={onClick} className={`${cls} cursor-pointer`}>{img}</button>
+    return <div className={cls}>{img}</div>
+  }
+
+  // 无 src 或图片加载失败 → CSS 首字母
+  const inner = (
     <div className="w-full h-full flex items-center justify-center text-white font-bold text-lg select-none"
       style={{ background: getGradientBg(name) }}>
       {(name || 'U')[0].toUpperCase()}
     </div>
   )
-
-  const cls = `rounded-full overflow-hidden flex-shrink-0 bg-surface-variant ${size} ${className}`
-
-  if (onClick) {
-    return <button onClick={onClick} className={`${cls} cursor-pointer`}>{inner}</button>
-  }
-
+  const cls = `rounded-full overflow-hidden flex-shrink-0 ${size} ${className}`
+  if (onClick) return <button onClick={onClick} className={`${cls} cursor-pointer`}>{inner}</button>
   return <div className={cls}>{inner}</div>
 }

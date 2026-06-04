@@ -130,9 +130,11 @@ export default function EventDetailPage() {
 
         {/* 操作按钮 */}
         {isHost ? (
-          <div className="bg-primary/5 backdrop-blur rounded-2xl p-5 text-center border border-primary/10">
-            <p className="text-sm font-semibold text-primary mb-1">你是此活动的组织者</p>
-            <p className="text-xs text-on-surface-variant/60">你可以在下方审核报名申请</p>
+          <div className="card p-5">
+            <p className="text-sm font-semibold text-primary text-center mb-3">你是此活动的组织者</p>
+            <div className="flex gap-2">
+              <button onClick={() => navigate(-1)} className="flex-1 py-3 bg-primary text-white rounded-full text-sm font-medium active:scale-95 transition-all">返回管理</button>
+            </div>
           </div>
         ) : myReg ? (
           <div className={`rounded-2xl p-5 text-center border backdrop-blur ${

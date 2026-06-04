@@ -50,6 +50,12 @@ export default function WorkDetailPage() {
       </div>
 
       <div className="px-margin-mobile -mt-6 relative">
+        <div className="flex items-center gap-2 mb-3">
+          <button onClick={() => navigate(-1)} className="w-8 h-8 flex items-center justify-center rounded-full bg-white/80 shadow-sm text-on-surface-variant">
+            <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+          </button>
+          <span className="text-sm text-on-surface-variant/60">作品详情</span>
+        </div>
         <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-white/40 p-5 mb-4">
           <h1 className="font-headline-xl text-headline-xl text-on-surface mb-1">{work.title}</h1>
           {work.price > 0 && (
