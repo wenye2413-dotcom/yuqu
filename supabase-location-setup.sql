@@ -108,3 +108,16 @@ CREATE TABLE IF NOT EXISTS public.works (
 ALTER TABLE public.works ENABLE ROW LEVEL SECURITY;
 CREATE POLICY IF NOT EXISTS "works_select" ON public.works FOR SELECT USING (true);
 CREATE POLICY IF NOT EXISTS "works_insert" ON public.works FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- 10. 活动报名表
+CREATE TABLE IF NOT EXISTS public.event_registrations (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  event_id UUID REFERENCES public.events(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL,
+  status TEXT DEFAULT 'pending',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE public.event_registrations ENABLE ROW LEVEL SECURITY;
+CREATE POLICY IF NOT EXISTS "reg_select" ON public.event_registrations FOR SELECT USING (auth.uid() = user_id OR auth.uid() IN (SELECT user_id FROM public.events WHERE id = event_id));
+CREATE POLICY IF NOT EXISTS "reg_insert" ON public.event_registrations FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY IF NOT EXISTS "reg_update" ON public.event_registrations FOR UPDATE USING (auth.uid() IN (SELECT user_id FROM public.events WHERE id = event_id));

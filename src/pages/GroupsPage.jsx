@@ -22,6 +22,11 @@ export default function GroupsPage() {
   const [tab, setTab] = useState("my");
   const [filterOpen, setFilterOpen] = useState(false);
   const [detail, setDetail] = useState(null);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createName, setCreateName] = useState("");
+  const [createDesc, setCreateDesc] = useState("");
+  const [createPublic, setCreatePublic] = useState(true);
+  const [creating, setCreating] = useState(false);
   const [filters, setFilters] = useState({ category: "全部", distance: "全城", activeTime: "最近活跃" });
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -185,6 +190,29 @@ export default function GroupsPage() {
       toast("申请已发送", "info");
     }
     setDetail(null);
+  };
+
+  // 创建群组
+  const handleCreate = async () => {
+    if (!createName.trim()) { toast("请输入群组名称", "error"); return }
+    setCreating(true);
+    const { data, error } = await supabase.from("groups").insert({
+      name: createName.trim(),
+      description: createDesc.trim(),
+      user_id: user.id,
+      is_public: createPublic,
+      member_count: 1,
+    }).select().single();
+    setCreating(false);
+    if (error) { toast("创建失败: " + error.message, "error"); return }
+    // 创建者自动成为成员
+    await supabase.from("group_members").insert({
+      group_id: data.id, user_id: user.id, status: "member", role: "owner",
+    });
+    setCreateOpen(false);
+    setCreateName(""); setCreateDesc("");
+    toast("群组已创建", "success");
+    fetchGroups(); fetchMyMemberships();
   };
 
   return (
@@ -405,6 +433,37 @@ export default function GroupsPage() {
             )}
           </div>
         </div>
+      )}
+      {/* 创建群组 FAB */}
+      <button onClick={() => setCreateOpen(true)}
+        className="fixed right-4 z-[70] w-14 h-14 bg-primary text-white rounded-full shadow-[0_8px_24px_rgba(149,73,13,0.3)] flex items-center justify-center hover:scale-105 active:scale-95 transition-all"
+        style={{ bottom: 100 }}>
+        <span className="material-symbols-outlined text-[28px]">add</span>
+      </button>
+
+      {createOpen && (
+        <>
+          <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setCreateOpen(false)} />
+          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 px-6 pt-4 pb-32 max-h-[70vh] overflow-y-auto">
+            <div className="w-10 h-1 bg-surface-variant rounded-full mx-auto mb-4" />
+            <h3 className="font-label-md text-label-md text-center mb-6 text-on-surface">创建群组</h3>
+            <div className="space-y-4">
+              <input type="text" value={createName} onChange={(e) => setCreateName(e.target.value)}
+                placeholder="群组名称" className="w-full bg-surface-container-low rounded-xl px-4 py-3 text-sm outline-none border border-outline-variant/30" />
+              <textarea value={createDesc} onChange={(e) => setCreateDesc(e.target.value)}
+                placeholder="群组简介（选填）" rows={3}
+                className="w-full bg-surface-container-low rounded-xl px-4 py-3 text-sm outline-none border border-outline-variant/30 resize-none" />
+              <label className="flex items-center gap-3 text-sm text-on-surface">
+                <input type="checkbox" checked={createPublic} onChange={(e) => setCreatePublic(e.target.checked)} className="accent-primary w-4 h-4" />
+                公开群组（所有人可加入）
+              </label>
+              <button onClick={handleCreate} disabled={creating || !createName.trim()}
+                className="w-full py-3.5 bg-primary text-white font-label-md rounded-full disabled:opacity-40 active:scale-95 transition-transform">
+                {creating ? "创建中..." : "创建群组"}
+              </button>
+            </div>
+          </div>
+        </>
       )}
     </main></div>
   );

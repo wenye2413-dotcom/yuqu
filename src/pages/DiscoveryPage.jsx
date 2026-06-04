@@ -112,11 +112,16 @@ export default function DiscoveryPage() {
     navigate(`/profile/${payingCreator.id}`);
   };
 
-  // 关注免费创作者
+  // 关注免费创作者（关注后跳转主页）
   const toggleFollow = (creatorId, name) => {
     const next = !followState[creatorId];
     setFollowState((prev) => ({ ...prev, [creatorId]: next }));
-    toast(next ? `已关注 ${name}` : `已取消关注 ${name}`, "info");
+    if (next) {
+      toast(`已关注 ${name}`, "success");
+      setTimeout(() => navigate(`/profile/${creatorId}`), 500);
+    } else {
+      toast(`已取消关注 ${name}`, "info");
+    }
   };
 
   // 活动加入
