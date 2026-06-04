@@ -162,55 +162,28 @@ export default function DiscoveryPage() {
         </button>
       </div>
 
-      {/* 分类导航 */}
-      <div className="flex gap-stack-sm overflow-x-auto pb-stack-md pt-stack-sm no-scrollbar -mx-margin-mobile px-margin-mobile">
-        {["全部", "热门", "附近", "新秀", "活动"].map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setActiveCategory(cat)}
-            className={`px-4 py-2 rounded-full font-label-md text-label-md whitespace-nowrap shadow-sm transition-colors ${
-              activeCategory === cat ? "bg-primary-container text-on-primary-container" : "bg-secondary/10 text-secondary"
-            }`}
-          >
-            {cat}
+      {/* 活动列表 — 发现页只展示活动 */}
+      {allEvents.length > 0 ? (
+        <div className="flex flex-col gap-gutter">
+          {allEvents.map((evt) => (
+            <EventCard
+              key={evt.id}
+              event={evt}
+              joinStatus={eventState[evt.id] || "none"}
+              onJoin={() => handleEventJoin(evt.id, evt.title, evt.isPublic)}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-20">
+          <span className="material-symbols-outlined text-4xl text-on-surface-variant/30">event</span>
+          <p className="text-sm text-on-surface-variant/50 mt-2">暂无活动</p>
+          <button onClick={() => navigate("/publish-event")}
+            className="mt-4 px-6 py-2.5 bg-primary text-white rounded-full text-sm font-medium shadow-lg active:scale-95 transition-all">
+            发起活动
           </button>
-        ))}
-      </div>
-
-      {/* 瀑布流 — 根据 activeCategory 过滤展示 */}
-      <div className="masonry-grid">
-        {/* 活动分类只显示 events，其余分类只显示 creators */}
-        {activeCategory === "活动"
-          ? allEvents.map((evt) => (
-              <EventCard
-                key={evt.id}
-                event={evt}
-                joinStatus={eventState[evt.id] || "none"}
-                onJoin={() => handleEventJoin(evt.id, evt.title, evt.isPublic)}
-              />
-            ))
-          : filteredCreators.map((creator) => (
-              <CreatorCard
-                key={creator.id}
-                creator={creator}
-                isSubscribed={subState[creator.id] || false}
-                isFollowed={followState[creator.id] || false}
-                onToggleSub={() => toggleSub(creator.id, creator.price)}
-                onToggleFollow={() => toggleFollow(creator.id, creator.name)}
-                onClickAvatar={() => handleAvatarClick(creator.id)}
-                onClickCard={() => {
-                  // 已订阅 → 跳转个人主页
-                  if (subState[creator.id]) {
-                    navigate(`/profile/${creator.id}`);
-                  } else if (creator.price > 0) {
-                    toggleSub(creator.id, creator.price);
-                  } else {
-                    toggleFollow(creator.id, creator.name);
-                  }
-                }}
-              />
-            ))}
-      </div>
+        </div>
+      )}
 
       {/* 筛选面板 */}
       {filterOpen && (
