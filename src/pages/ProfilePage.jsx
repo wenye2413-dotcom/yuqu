@@ -11,8 +11,8 @@ import { getLevelFromEnergy, getLevelMaxEnergy } from "../hooks/utils";
 
 const tabs = [
   { key: "works", label: "作品" },
-  { key: "followers", label: "关注者" },
-  { key: "following", label: "正在关注" },
+  { key: "hosted", label: "我发布的活动" },
+  { key: "joined", label: "我参加的" },
 ];
 
 export default function ProfilePage() {
@@ -33,6 +33,7 @@ export default function ProfilePage() {
 
   const [myWorks, setMyWorks] = useState([]);
   const [myEvents, setMyEvents] = useState([]);
+  const [joinedEvents, setJoinedEvents] = useState([]);
   const [followerCount, setFollowerCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
 
@@ -43,6 +44,9 @@ export default function ProfilePage() {
     });
     supabase.from("events").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).then(({ data }) => {
       if (data) setMyEvents(data);
+    });
+    supabase.from("event_registrations").select("*, events(*)").eq("user_id", user.id).order("created_at", { ascending: false }).then(({ data }) => {
+      if (data) setJoinedEvents(data.filter(r => r.status === 'approved').map(r => r.events).filter(Boolean));
     });
   }, [user?.id]);
 
@@ -119,19 +123,24 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* 统计 */}
-          <div className="bg-white/80 backdrop-blur-xl rounded-xl shadow-sm border border-white/40 flex mb-4">
-            {[
-              { label: "作品", value: myWorks.length },
-              { label: "活动", value: myEvents.length },
-              { label: "关注者", value: followerCount },
-              { label: "正在关注", value: followingCount },
-            ].map((s, i) => (
-              <div key={s.label} className={`flex-1 py-3 text-center ${i < 3 ? 'border-r border-outline-variant/20' : ''}`}>
-                <p className="font-bold text-headline-lg-mobile text-on-surface">{s.value}</p>
-                <p className="text-[10px] text-on-surface-variant/60">{s.label}</p>
-              </div>
-            ))}
+          {/* 统计（可点击） */}
+          <div className="bg-white/80 backdrop-blur-xl rounded-xl shadow-sm border border-white/40 flex mb-4 overflow-hidden">
+            <div className="flex-1 py-3 text-center border-r border-outline-variant/20">
+              <p className="font-bold text-headline-lg-mobile text-on-surface">{myWorks.length}</p>
+              <p className="text-[10px] text-on-surface-variant/60">作品</p>
+            </div>
+            <div className="flex-1 py-3 text-center border-r border-outline-variant/20">
+              <p className="font-bold text-headline-lg-mobile text-on-surface">{myEvents.length}</p>
+              <p className="text-[10px] text-on-surface-variant/60">活动</p>
+            </div>
+            <div onClick={() => navigate('/followers')} className="flex-1 py-3 text-center border-r border-outline-variant/20 cursor-pointer active:bg-surface-container-low transition-colors">
+              <p className="font-bold text-headline-lg-mobile text-on-surface">{followerCount}</p>
+              <p className="text-[10px] text-on-surface-variant/60">关注者</p>
+            </div>
+            <div onClick={() => navigate('/following')} className="flex-1 py-3 text-center cursor-pointer active:bg-surface-container-low transition-colors">
+              <p className="font-bold text-headline-lg-mobile text-on-surface">{followingCount}</p>
+              <p className="text-[10px] text-on-surface-variant/60">正在关注</p>
+            </div>
           </div>
 
           {/* Tab */}
@@ -174,19 +183,60 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {/* 关注者 */}
-          {activeTab === "followers" && (
-            <div className="text-center py-16 text-sm text-on-surface-variant/50 pb-8">
-              <span className="material-symbols-outlined text-3xl text-on-surface-variant/20">people</span>
-              <p className="mt-2">关注功能开发中</p>
+          {/* 我发布的活动 */}
+          {activeTab === "hosted" && (
+            <div className="pb-8">
+              {myEvents.length === 0 ? (
+                <div className="text-center py-16">
+                  <span className="material-symbols-outlined text-3xl text-on-surface-variant/20">event</span>
+                  <p className="text-sm text-on-surface-variant/50 mt-2">暂无发布的活动</p>
+                  <button onClick={() => navigate('/publish-event')}
+                    className="mt-4 px-6 py-2.5 bg-primary text-white rounded-full text-sm font-medium shadow-sm active:scale-95 transition-all">
+                    发布活动
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {myEvents.map(e => (
+                    <div key={e.id} onClick={() => navigate(`/event/${e.id}`)}
+                      className="card card-hover flex items-center justify-between p-4">
+                      <div>
+                        <p className="font-semibold text-sm text-on-surface">{e.title}</p>
+                        <p className="text-xs text-on-surface-variant/60 mt-0.5">{e.location || ''}{e.event_time ? ` · ${new Date(e.event_time).toLocaleDateString('zh-CN')}` : ''}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-primary/60 font-medium">管理</span>
+                        <span className="material-symbols-outlined text-on-surface-variant/30 text-[18px]">chevron_right</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
-          {/* 正在关注 */}
-          {activeTab === "following" && (
-            <div className="text-center py-16 text-sm text-on-surface-variant/50 pb-8">
-              <span className="material-symbols-outlined text-3xl text-on-surface-variant/20">person_add</span>
-              <p className="mt-2">关注功能开发中</p>
+          {/* 我参加的活动 */}
+          {activeTab === "joined" && (
+            <div className="pb-8">
+              {joinedEvents.length === 0 ? (
+                <div className="text-center py-16">
+                  <span className="material-symbols-outlined text-3xl text-on-surface-variant/20">event_upcoming</span>
+                  <p className="text-sm text-on-surface-variant/50 mt-2">暂未参加活动</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {joinedEvents.map(e => (
+                    <div key={e.id} onClick={() => navigate(`/event/${e.id}`)}
+                      className="card card-hover flex items-center justify-between p-4">
+                      <div>
+                        <p className="font-semibold text-sm text-on-surface">{e.title}</p>
+                        <p className="text-xs text-on-surface-variant/60 mt-0.5">{e.location || ''}</p>
+                      </div>
+                      <span className="material-symbols-outlined text-on-surface-variant/30 text-[18px]">chevron_right</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
