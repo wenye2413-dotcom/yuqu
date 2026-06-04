@@ -455,7 +455,7 @@ export default function GroupsPage() {
                 className="w-full bg-surface-container-low rounded-xl px-4 py-3 text-sm outline-none border border-outline-variant/30 resize-none" />
               <label className="flex items-center gap-3 text-sm text-on-surface">
                 <input type="checkbox" checked={createPublic} onChange={(e) => setCreatePublic(e.target.checked)} className="accent-primary w-4 h-4" />
-                公开群组（所有人可加入）
+                公开群组
               </label>
               <button onClick={handleCreate} disabled={creating || !createName.trim()}
                 className="w-full py-3.5 bg-primary text-white font-label-md rounded-full disabled:opacity-40 active:scale-95 transition-transform">

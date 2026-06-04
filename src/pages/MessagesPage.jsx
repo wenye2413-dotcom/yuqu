@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation as useRouterLocation } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../hooks/useToast";
@@ -60,13 +60,13 @@ function CommentThread({ reply, postId, profiles, currentUserId, onAvatarClick, 
 
 export default function MessagesPage() {
   const navigate = useNavigate();
+  const routerLocation = useRouterLocation();
   const [searchParams] = useSearchParams();
   const focusPostId = searchParams.get('post');
   const toast = useToast();
   const { user } = useAuth();
   const [posts, setPosts] = useState([]);
   const [profiles, setProfiles] = useState({});
-  const [fabOpen, setFabOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [expandedId, setExpandedId] = useState(null);
 
@@ -257,7 +257,7 @@ export default function MessagesPage() {
   useEffect(() => {
     fetchPosts();
     fetchProfiles();
-  }, [location]); // location 变化时重新拉取
+  }, [location, routerLocation]); // GPS 或路由变化时重新拉取
 
   // 用 ref 解决闭包失效问题，让轮询和订阅始终拿到最新的 fetchPosts
   const fetchPostsRef = useRef(fetchPosts)
@@ -699,25 +699,6 @@ export default function MessagesPage() {
         </>
       )}
 
-      {fabOpen && (
-        <>
-          <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setFabOpen(false)} />
-          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-[80] px-6 pt-4 pb-32 shadow-xl max-h-[70vh] overflow-y-auto">
-            <div className="w-10 h-1 bg-surface-variant rounded-full mx-auto mb-4" />
-            <h3 className="font-label-md text-label-md text-center mb-4 text-on-surface">发布</h3>
-            <div className="flex flex-col gap-2">
-              <button onClick={() => { setFabOpen(false); navigate("/publish-event"); }} className="flex items-center gap-4 px-4 py-4 bg-surface-container-low/50 rounded-xl text-left active:scale-[0.98] transition-transform">
-                <span className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-[20px]">📅</span>
-                <div><p className="font-label-md text-label-md text-on-surface">发布活动</p><p className="text-xs text-on-surface-variant">创建一场线下活动</p></div>
-              </button>
-              <button onClick={() => { setFabOpen(false); navigate("/publish-work"); }} className="flex items-center gap-4 px-4 py-4 bg-surface-container-low/50 rounded-xl text-left active:scale-[0.98] transition-transform">
-                <span className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-[20px]">🔖</span>
-                <div><p className="font-label-md text-label-md text-on-surface">发布作品</p><p className="text-xs text-on-surface-variant">展示你的创作</p></div>
-              </button>
-            </div>
-          </div>
-        </>
-      )}
     </div>
   );
 }

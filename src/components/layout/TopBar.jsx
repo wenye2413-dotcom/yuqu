@@ -56,11 +56,13 @@ export default function TopBar() {
       )
       .subscribe()
 
-    // 回到前台时刷新
+    // 每5秒轮询（Realtime 不可靠时后备）
+    const timer = setInterval(fetchNotifCount, 5000)
     const onFocus = () => fetchNotifCount()
     window.addEventListener('focus', onFocus)
     return () => {
       supabase.removeChannel(channel)
+      clearInterval(timer)
       window.removeEventListener('focus', onFocus)
     }
   }, [user?.id])
