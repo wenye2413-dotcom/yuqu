@@ -4,7 +4,6 @@ import { AnimatePresence, motion } from "framer-motion"
 import Avatar from "../common/Avatar"
 
 const menuItems = [
-  { icon: 'notifications', label: '通知', key: 'notifications' },
   { icon: 'edit', label: '编辑资料', key: 'edit-profile' },
   { icon: 'settings', label: '设置', key: 'settings' },
 ]
@@ -16,9 +15,6 @@ export default function Sidebar({ open, onClose }) {
   const handleClick = (key) => {
     onClose()
     switch (key) {
-      case 'notifications':
-        navigate('/notifications')
-        break
       case 'edit-profile':
         navigate('/profile?edit=1')
         break

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../hooks/useToast";
@@ -60,6 +60,8 @@ function CommentThread({ reply, postId, profiles, currentUserId, onAvatarClick, 
 
 export default function MessagesPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const focusPostId = searchParams.get('post');
   const toast = useToast();
   const { user } = useAuth();
   const [posts, setPosts] = useState([]);
@@ -226,6 +228,10 @@ export default function MessagesPage() {
           }
         });
         setPosts(postsWithReplies);
+        // 检查是否有通知跳转指定的帖子
+        if (focusPostId && postsWithReplies.find(p => p.id === focusPostId)) {
+          setExpandedId(focusPostId)
+        }
         // 滚动到底部（显示最新消息）
         setTimeout(() => {
           if (scrollRef.current) {

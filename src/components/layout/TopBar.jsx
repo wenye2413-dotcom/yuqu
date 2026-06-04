@@ -88,9 +88,17 @@ export default function TopBar() {
           </h1>
         )}
 
-        {/* 右侧：三点菜单 */}
+        {/* 右侧：通知铃铛 + 三点菜单 */}
         {showMenu && (
-          <div className="relative" ref={menuRef}>
+          <div className="flex items-center gap-0">
+            <button onClick={() => navigate('/notifications')}
+              className="relative text-on-surface-variant hover:bg-surface-container-low/50 rounded-full p-2 transition-colors">
+              <span className="material-symbols-outlined text-[22px]">notifications</span>
+              {notifCount > 0 && (
+                <span className="absolute top-1 right-1 w-2 h-2 bg-error rounded-full" />
+              )}
+            </button>
+            <div className="relative" ref={menuRef}>
             <button
               onClick={() => setMenuOpen(!menuOpen)}
               className="text-on-surface-variant hover:bg-surface-container-low/50 rounded-full p-2 transition-colors"

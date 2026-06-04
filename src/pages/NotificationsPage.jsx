@@ -2,7 +2,6 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { supabase } from "../supabaseClient"
 import { useAuth } from "../context/AuthContext"
-import { formatDistance } from "../hooks/useLocation"
 import Avatar from "../components/common/Avatar"
 
 export default function NotificationsPage() {
@@ -10,12 +9,12 @@ export default function NotificationsPage() {
   const { user } = useAuth()
   const [notifs, setNotifs] = useState([])
   const [profiles, setProfiles] = useState({})
+  const [replyTexts, setReplyTexts] = useState({})
 
   useEffect(() => {
     fetchNotifs()
     fetchProfiles()
 
-    // 实时订阅新通知
     const channel = supabase
       .channel('notif-live')
       .on('postgres_changes',
@@ -43,6 +42,20 @@ export default function NotificationsPage() {
       .order("created_at", { ascending: false })
       .limit(50)
     if (data) setNotifs(data)
+
+    // 获取回复预览文本
+    const replyIds = data?.filter(n => n.reply_id).map(n => n.reply_id) || []
+    if (replyIds.length > 0) {
+      const { data: replies } = await supabase
+        .from("post_replies")
+        .select("id, content")
+        .in("id", replyIds)
+      if (replies) {
+        const map = {}
+        replies.forEach(r => { map[r.id] = r.content })
+        setReplyTexts(map)
+      }
+    }
 
     // 标记已读
     await supabase.from("notifications").update({ read: true }).eq("user_id", user?.id).eq("read", false)
@@ -78,20 +91,27 @@ export default function NotificationsPage() {
         )}
 
         <div className="flex flex-col gap-1">
-          {notifs.map((n) => (
-            <div key={n.id} onClick={() => navigate(`/messages`)}
-              className={`flex items-start gap-3 px-3 py-3 rounded-xl cursor-pointer active:scale-[0.98] transition-all ${!n.read ? 'bg-primary/5' : ''}`}>
-              <Avatar name={n.actor_id || 'U'} size="w-10 h-10" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-on-surface">
-                  <span className="font-semibold">{getActorName(n.actor_id)}</span>
-                  {n.type === 'reply' && <span className="text-on-surface-variant"> 回复了你</span>}
-                </p>
-                <p className="text-xs text-on-surface-variant/60 mt-0.5">{formatTime(n.created_at)}</p>
+          {notifs.map((n) => {
+            const replyPreview = replyTexts[n.reply_id]
+            return (
+              <div key={n.id}
+                onClick={() => navigate(`/messages?post=${n.post_id || ''}`)}
+                className={`flex items-start gap-3 px-3 py-3 rounded-xl cursor-pointer active:scale-[0.98] transition-all ${!n.read ? 'bg-primary/5' : ''}`}>
+                <Avatar name={n.actor_id || 'U'} size="w-10 h-10" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-on-surface">
+                    <span className="font-semibold">{getActorName(n.actor_id)}</span>
+                    <span className="text-on-surface-variant"> 回复了你</span>
+                  </p>
+                  {replyPreview && (
+                    <p className="text-xs text-on-surface-variant/70 mt-0.5 truncate">{replyPreview}</p>
+                  )}
+                  <p className="text-xs text-on-surface-variant/50 mt-0.5">{formatTime(n.created_at)}</p>
+                </div>
+                {!n.read && <span className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />}
               </div>
-              {!n.read && <span className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />}
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
     </div>
