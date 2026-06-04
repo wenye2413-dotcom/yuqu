@@ -121,3 +121,49 @@ ALTER TABLE public.event_registrations ENABLE ROW LEVEL SECURITY;
 CREATE POLICY IF NOT EXISTS "reg_select" ON public.event_registrations FOR SELECT USING (auth.uid() = user_id OR auth.uid() IN (SELECT user_id FROM public.events WHERE id = event_id));
 CREATE POLICY IF NOT EXISTS "reg_insert" ON public.event_registrations FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY IF NOT EXISTS "reg_update" ON public.event_registrations FOR UPDATE USING (auth.uid() IN (SELECT user_id FROM public.events WHERE id = event_id));
+
+-- 11. 群组表
+CREATE TABLE IF NOT EXISTS public.groups (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL, description TEXT DEFAULT '',
+  user_id UUID NOT NULL, member_count INT DEFAULT 1,
+  is_public BOOLEAN DEFAULT true, created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE public.groups ENABLE ROW LEVEL SECURITY;
+CREATE POLICY IF NOT EXISTS "groups_select" ON public.groups FOR SELECT USING (true);
+CREATE POLICY IF NOT EXISTS "groups_insert" ON public.groups FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE TABLE IF NOT EXISTS public.group_members (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  group_id UUID REFERENCES public.groups(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL, status TEXT DEFAULT 'member',
+  role TEXT DEFAULT 'member', created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(group_id, user_id)
+);
+ALTER TABLE public.group_members ENABLE ROW LEVEL SECURITY;
+CREATE POLICY IF NOT EXISTS "members_select" ON public.group_members FOR SELECT USING (true);
+CREATE POLICY IF NOT EXISTS "members_insert" ON public.group_members FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY IF NOT EXISTS "members_update" ON public.group_members FOR UPDATE USING (true);
+
+-- 12. 地点交流表
+CREATE TABLE IF NOT EXISTS public.location_chats (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL, description TEXT DEFAULT '',
+  latitude DOUBLE PRECISION NOT NULL, longitude DOUBLE PRECISION NOT NULL,
+  radius INT DEFAULT 200, location_text TEXT DEFAULT '',
+  created_by UUID NOT NULL, created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE public.location_chats ENABLE ROW LEVEL SECURITY;
+CREATE POLICY IF NOT EXISTS "lc_select" ON public.location_chats FOR SELECT USING (true);
+CREATE POLICY IF NOT EXISTS "lc_insert" ON public.location_chats FOR INSERT WITH CHECK (auth.uid() = created_by);
+
+CREATE TABLE IF NOT EXISTS public.location_messages (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  chat_id UUID REFERENCES public.location_chats(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL, content TEXT NOT NULL,
+  user_lat DOUBLE PRECISION, user_lng DOUBLE PRECISION,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE public.location_messages ENABLE ROW LEVEL SECURITY;
+CREATE POLICY IF NOT EXISTS "lm_select" ON public.location_messages FOR SELECT USING (true);
+CREATE POLICY IF NOT EXISTS "lm_insert" ON public.location_messages FOR INSERT WITH CHECK (auth.uid() = user_id);
