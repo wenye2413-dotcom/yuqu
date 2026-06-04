@@ -75,3 +75,36 @@ CREATE TRIGGER on_reply_insert
 
 -- 7. 通知表开 Realtime
 ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
+
+-- 8. 活动表
+CREATE TABLE IF NOT EXISTS public.events (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  location TEXT,
+  event_time TIMESTAMPTZ,
+  latitude double precision,
+  longitude double precision,
+  image_url TEXT,
+  is_public BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
+CREATE POLICY IF NOT EXISTS "events_select" ON public.events FOR SELECT USING (true);
+CREATE POLICY IF NOT EXISTS "events_insert" ON public.events FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- 9. 作品表
+CREATE TABLE IF NOT EXISTS public.works (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  price DECIMAL(10,2) DEFAULT 0,
+  cover_url TEXT,
+  file_urls TEXT[] DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE public.works ENABLE ROW LEVEL SECURITY;
+CREATE POLICY IF NOT EXISTS "works_select" ON public.works FOR SELECT USING (true);
+CREATE POLICY IF NOT EXISTS "works_insert" ON public.works FOR INSERT WITH CHECK (auth.uid() = user_id);

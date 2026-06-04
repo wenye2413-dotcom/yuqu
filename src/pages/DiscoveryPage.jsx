@@ -3,9 +3,10 @@ import { useNavigate } from "react-router-dom";
 import CreatorCard from "../components/discovery/CreatorCard";
 import EventCard from "../components/discovery/EventCard";
 import Avatar from "../components/common/Avatar";
-import { users, events, filterOptions } from "../mocks/data";
+import { users, filterOptions } from "../mocks/data";
 import { useToast } from "../hooks/useToast";
 import { getAvatarUrl } from "../hooks/utils";
+import { supabase } from "../supabaseClient";
 
 export default function DiscoveryPage() {
   const navigate = useNavigate();
@@ -30,7 +31,14 @@ export default function DiscoveryPage() {
 
   // 从 users 提取创作者列表 (由用户数据驱动)
   const allCreators = Object.values(users).filter((u) => u.isCreator && u.id !== "u_self");
-  const allEvents = events;
+
+  // 从 Supabase 加载真实活动
+  const [allEvents, setAllEvents] = useState([]);
+  useEffect(() => {
+    supabase.from("events").select("*").order("created_at", { ascending: false }).then(({ data }) => {
+      if (data) setAllEvents(data);
+    });
+  }, []);
 
   // 分类关键字映射
   const categoryKeywords = {
