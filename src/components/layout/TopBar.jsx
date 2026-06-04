@@ -133,6 +133,7 @@ export default function TopBar() {
               </div>
             )}
           </div>
+          </div>
         )}
 
         {!showMenu && <div className="w-10" />}
