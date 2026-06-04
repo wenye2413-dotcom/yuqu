@@ -243,84 +243,57 @@ export default function GroupsPage() {
         </div>
       </div>
 
-      {/* Tab 导航 */}
-      <div className="px-margin-mobile mb-4">
-        <div className="relative flex gap-stack-sm bg-surface-container-low/50 p-unit rounded-full border-[1.5px] border-white/40 shadow-sm backdrop-blur-md">
-          <div
-            className="absolute top-unit bottom-unit left-unit w-[calc(50%-4px)] bg-primary-container rounded-full shadow-sm z-0 transition-all duration-400"
-            style={{ transform: tab === "interest" ? "translateX(100%)" : "" }}
-          />
-          <button
-            className={`relative z-10 flex-1 py-2 px-4 rounded-full font-label-md text-label-md transition-colors ${tab === "my" ? "text-on-primary-container" : "text-on-surface-variant"}`}
-            onClick={() => setTab("my")}
-          >
-            我的群组 ({myGroups.length})
-          </button>
-          <button
-            className={`relative z-10 flex-1 py-2 px-4 rounded-full font-label-md text-label-md transition-colors ${tab === "interest" ? "text-on-primary-container" : "text-on-surface-variant"}`}
-            onClick={() => setTab("interest")}
-          >
-            兴趣群组 ({filteredInterest.length})
-          </button>
-        </div>
-      </div>
-
-      {/* 内容 */}
+      {/* 群组列表 — 搜索 + 混合展示 */}
       <div className="px-margin-mobile">
-        {tab === "my" ? (
-          myGroups.length === 0 ? (
-            <div className="text-center py-12 text-on-surface-variant">
-              <span className="material-symbols-outlined text-4xl mb-2">groups</span>
-              <p>还没有加入任何群组</p>
-              <p className="text-sm mt-1">在「兴趣群组」中探索发现</p>
-            </div>
-          ) : (
+        {(() => {
+          const allGroups = [...myGroups, ...interestGroups.filter(g => !myGroups.find(m => m.id === g.id))]
+          const searched = searchQuery
+            ? allGroups.filter(g => g.name.toLowerCase().includes(searchQuery.toLowerCase()))
+            : allGroups
+
+          if (searched.length === 0) {
+            return (
+              <div className="text-center py-12 text-on-surface-variant">
+                <span className="material-symbols-outlined text-4xl mb-2">search</span>
+                <p>{searchQuery ? '没有找到匹配的群组' : '还没有群组'}</p>
+                <p className="text-sm mt-1">搜索群名或创建一个</p>
+              </div>
+            )
+          }
+
+          return (
             <div className="flex flex-col gap-stack-md">
-              {myGroups.map((g) => (
-                <div
-                  key={g.id}
-                  className="bg-white/80 backdrop-blur-xl rounded-lg p-4 flex items-center gap-4 border-[1.5px] border-white/40 shadow-sm cursor-pointer active:scale-[0.98] transition-transform"
-                  onClick={() => navigate(`/group-chat/${g.id}`)}
-                >
-                  <Avatar name={g.avatar} size="w-14 h-14" className="rounded-[1rem]" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-baseline mb-1">
-                      <h3 className="font-label-md text-label-md text-on-surface truncate">{g.name}</h3>
-                      <span className="text-[10px] text-on-surface-variant/60 shrink-0">{g.time}</span>
+              {searched.map((g) => {
+                const joined = joinStates[g.id] === "joined"
+                const applied = joinStates[g.id] === "applied"
+                return (
+                  <div key={g.id}
+                    className="card card-hover p-4 flex items-center gap-4"
+                    onClick={() => joined ? navigate(`/group-chat/${g.id}`) : setDetail(g)}>
+                    <Avatar name={g.avatar || g.name} size="w-14 h-14" className="rounded-[1rem]" />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-sm text-on-surface truncate">{g.name}</h3>
+                      <p className="text-xs text-on-surface-variant/70 truncate">{g.desc || g.lastMessage || ""}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[10px] text-on-surface-variant/50">{g.memberCount || 0} 人</span>
+                        {joined && <span className="text-[10px] text-bamboo-600 font-medium">已加入</span>}
+                      </div>
                     </div>
-                    <p className="font-body-md text-[13px] text-on-surface-variant truncate">
-                      {g.sender && <span className="text-primary font-medium">{g.sender}: </span>}
-                      {g.lastMessage}
-                    </p>
+                    <button onClick={(e) => handleJoin(e, g)}
+                      className={`shrink-0 px-4 py-1.5 rounded-full text-xs font-medium ${
+                        joined ? 'bg-bamboo-50 text-bamboo-700' :
+                        applied ? 'bg-secondary/10 text-secondary' :
+                        'bg-[#95490d] text-white'
+                      }`}>
+                      {joined ? '进入' : applied ? '已申请' : '加入'}
+                    </button>
                   </div>
-                  <div className="flex items-center gap-1 text-on-surface-variant/40">
-                    <span className="material-symbols-outlined text-[14px]">group</span>
-                    <span className="text-[10px]">{g.memberCount}</span>
-                  </div>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); share(`加入「${g.name}」`, `${g.desc || g.lastMessage || ""}`, `/group-chat/${g.id}`); }}
-                    className="w-7 h-7 flex items-center justify-center text-on-surface-variant/40 hover:text-primary transition-colors"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">share</span>
-                  </button>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )
-        ) : (
-          <div className="flex flex-col gap-stack-md">
-            {filteredInterest.map((g) => (
-              <div
-                key={g.id}
-                className="bg-white/80 backdrop-blur-xl rounded-lg p-4 flex items-center gap-4 border-[1.5px] border-white/40 shadow-sm cursor-pointer active:scale-[0.98] transition-transform"
-                onClick={() => setDetail(g)}
-              >
-                <Avatar name={g.avatar} size="w-14 h-14" className="rounded-[1rem]" />
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-label-md text-label-md text-on-surface truncate">{g.name}</h3>
-                  <p className="font-body-md text-[13px] text-on-surface-variant truncate">{g.desc}</p>
-                </div>
-                {(() => {
+        })()}
+      </div>
                   const s = translateJoinStatus(joinStates[g.id], g.isPublic);
                   return (
                     <button

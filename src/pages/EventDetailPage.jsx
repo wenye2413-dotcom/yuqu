@@ -26,10 +26,17 @@ export default function EventDetailPage() {
       supabase.from("profiles").select("name").eq("id", data.user_id).single().then(({ data: p }) => {
         if (p) setHost(p);
       });
-      supabase.from("event_registrations").select("*").eq("event_id", eventId).eq("user_id", user?.id).maybeSingle().then(({ data: r }) => {
-        if (r) setMyReg(r);
-      });
+      // 如果是主办方，不查询报名状态（避免显示待审核）
       if (user?.id === data.user_id) {
+        setMyReg(null);
+        supabase.from("event_registrations").select("*").eq("event_id", eventId).order("created_at", { ascending: false }).then(({ data: list }) => {
+          if (list) setRegs(list);
+        });
+      } else {
+        supabase.from("event_registrations").select("*").eq("event_id", eventId).eq("user_id", user?.id).maybeSingle().then(({ data: r }) => {
+          if (r) setMyReg(r);
+        });
+      }
         supabase.from("event_registrations").select("*").eq("event_id", eventId).order("created_at", { ascending: false }).then(({ data: list }) => {
           if (list) setRegs(list);
         });
