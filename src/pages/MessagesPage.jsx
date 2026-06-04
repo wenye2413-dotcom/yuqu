@@ -253,20 +253,28 @@ export default function MessagesPage() {
     fetchProfiles();
   }, [location]); // location 变化时重新拉取
 
-  // 实时订阅 + 轮询（WebSocket 被墙时的后备）
+  // 用 ref 解决闭包失效问题，让轮询和订阅始终拿到最新的 fetchPosts
+  const fetchPostsRef = useRef(fetchPosts)
+  const fetchProfilesRef = useRef(fetchProfiles)
+  fetchPostsRef.current = fetchPosts
+  fetchProfilesRef.current = fetchProfiles
+
+  // 实时订阅 + 轮询
   useEffect(() => {
+    const doFetch = () => { fetchPostsRef.current(); fetchProfilesRef.current() }
+    const doFetchPosts = () => fetchPostsRef.current()
+
     const channel = supabase
       .channel('posts-live')
       .on('postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'posts' },
-        () => { fetchPosts(); fetchProfiles(); }
+        doFetch
       )
       .subscribe()
 
-    // 每15秒轮询一次（Realtime 不可用时后备）
     const pollTimer = setInterval(() => {
-      fetchPosts()
-    }, 15000)
+      doFetchPosts()
+    }, 10000)
 
     return () => {
       supabase.removeChannel(channel)
