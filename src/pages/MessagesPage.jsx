@@ -253,7 +253,7 @@ export default function MessagesPage() {
     fetchProfiles();
   }, [location]); // location 变化时重新拉取
 
-  // 实时订阅新消息
+  // 实时订阅 + 轮询（WebSocket 被墙时的后备）
   useEffect(() => {
     const channel = supabase
       .channel('posts-live')
@@ -263,7 +263,15 @@ export default function MessagesPage() {
       )
       .subscribe()
 
-    return () => { supabase.removeChannel(channel) }
+    // 每15秒轮询一次（Realtime 不可用时后备）
+    const pollTimer = setInterval(() => {
+      fetchPosts()
+    }, 15000)
+
+    return () => {
+      supabase.removeChannel(channel)
+      clearInterval(pollTimer)
+    }
   }, [])
 
   useEffect(() => {
