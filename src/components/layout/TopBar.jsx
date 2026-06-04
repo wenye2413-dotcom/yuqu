@@ -8,12 +8,13 @@ import Sidebar from "./Sidebar";
 
 const titles = {
   "/messages": "消息",
+  "/location-chats": "地点",
   "/groups": "群组",
   "/discovery": "CREATOR",
   "/profile": "我的",
 };
 
-const menuPages = ["/profile", "/discovery", "/messages", "/groups"];
+const menuPages = ["/profile", "/discovery", "/messages", "/groups", "/location-chats"];
 
 export default function TopBar() {
   const location = useLocation();

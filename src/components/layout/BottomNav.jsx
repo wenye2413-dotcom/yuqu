@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 const tabs = [
   { path: "/messages", icon: "chat", label: "消息" },
+  { path: "/location-chats", icon: "map", label: "地点" },
   { path: "/groups", icon: "groups", label: "群组" },
   { path: "/discovery", icon: "explore", label: "发现" },
   { path: "/profile", icon: "person", label: "我的" },
