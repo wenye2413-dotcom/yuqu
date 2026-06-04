@@ -132,8 +132,11 @@ export default function EventDetailPage() {
         {isHost ? (
           <div className="card p-5">
             <p className="text-sm font-semibold text-primary text-center mb-3">你是此活动的组织者</p>
-            <div className="flex gap-2">
-              <button onClick={() => navigate(-1)} className="flex-1 py-3 bg-primary text-white rounded-full text-sm font-medium active:scale-95 transition-all">返回管理</button>
+            <div className="space-y-2">
+              <div className="bg-primary/5 rounded-xl p-4 text-sm text-on-surface-variant">
+                共有 <strong>{regs.length}</strong> 人报名
+                {pendingRegs.length > 0 && <span>，<strong className="text-primary">{pendingRegs.length}</strong> 人待审核</span>}
+              </div>
             </div>
           </div>
         ) : myReg ? (

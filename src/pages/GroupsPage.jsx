@@ -254,7 +254,7 @@ export default function GroupsPage() {
             className={`relative z-10 flex-1 py-2 px-4 rounded-full font-label-md text-label-md transition-colors ${tab === "my" ? "text-on-primary-container" : "text-on-surface-variant"}`}
             onClick={() => setTab("my")}
           >
-            我的社区 ({myGroups.length})
+            我的群组 ({myGroups.length})
           </button>
           <button
             className={`relative z-10 flex-1 py-2 px-4 rounded-full font-label-md text-label-md transition-colors ${tab === "interest" ? "text-on-primary-container" : "text-on-surface-variant"}`}

@@ -572,7 +572,14 @@ export default function MessagesPage() {
                       </div>
                     </div>
                   </div>
-                  <p className="font-body-md text-body-md">{post.message}</p>
+                  {/* 消息内容 — 支持图片渲染 */}
+                  {post.message?.startsWith('![](') ? (
+                    <img src={post.message.match(/!\[.*?\]\((.*?)\)/)?.[1]} alt=""
+                      className="w-full max-h-64 object-cover rounded-xl mt-1"
+                      onError={(e) => { e.target.style.display = 'none' }} />
+                  ) : (
+                    <p className="font-body-md text-body-md">{post.message}</p>
+                  )}
                 </div>
 
                 {isExpanded && (
