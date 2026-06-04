@@ -270,9 +270,12 @@ export default function MessagesPage() {
         { event: 'INSERT', schema: 'public', table: 'posts' },
         doFetch
       )
-      .subscribe()
+      .subscribe((status) => {
+        if (status !== 'SUBSCRIBED') console.log('[Realtime] 状态:', status)
+      })
 
     const pollTimer = setInterval(() => {
+      console.log('[轮询] 自动刷新消息')
       doFetchPosts()
     }, 10000)
 
