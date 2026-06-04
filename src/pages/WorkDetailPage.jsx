@@ -56,7 +56,18 @@ export default function WorkDetailPage() {
           </button>
           <span className="text-sm text-on-surface-variant/60">作品详情</span>
         </div>
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-white/40 p-5 mb-4">
+        {work.images?.length > 0 && (
+          <div className="mb-4 -mx-margin-mobile px-margin-mobile">
+            <div className="flex gap-2 overflow-x-auto snap-x snap-mandatory no-scrollbar">
+              {work.images.map((url, i) => (
+                <div key={i} className="snap-center shrink-0 w-full aspect-video rounded-2xl overflow-hidden bg-surface-variant">
+                  <img src={url} alt="" className="w-full h-full object-cover" />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        <div className="card p-5 mb-4">
           <h1 className="font-headline-xl text-headline-xl text-on-surface mb-1">{work.title}</h1>
           {work.price > 0 && (
             <div className="inline-block bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-semibold mb-3">

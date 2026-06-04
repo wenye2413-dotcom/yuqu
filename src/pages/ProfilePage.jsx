@@ -153,23 +153,37 @@ export default function ProfilePage() {
                   <span className="material-symbols-outlined text-3xl text-on-surface-variant/20">palette</span>
                   <p className="text-sm text-on-surface-variant/50 mt-2">暂无作品</p>
                   <button onClick={() => navigate("/publish-work")}
-                    className="mt-4 px-6 py-2.5 bg-primary text-white rounded-full text-sm font-medium shadow-sm active:scale-95 transition-all">
+                    className="mt-4 px-6 py-2.5 bg-[#95490d] text-white rounded-full text-sm font-medium shadow-sm active:scale-95 transition-all">
                     发布作品
                   </button>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-3 pb-6">
                   {myWorks.map(w => (
                     <div key={w.id} onClick={() => navigate(`/works/${w.id}`)}
-                      className="bg-white/80 backdrop-blur rounded-xl overflow-hidden shadow-sm border border-white/40 active:scale-[0.97] transition-all cursor-pointer">
-                      <div className="h-24" style={{ background: getGradientBg(w.title) }} />
+                      className="card overflow-hidden active:scale-[0.97] transition-all cursor-pointer">
+                      {w.images?.length > 0 ? (
+                        <div className="aspect-[4/3] overflow-hidden bg-surface-variant">
+                          <img src={w.images[0]} alt="" className="w-full h-full object-cover" />
+                        </div>
+                      ) : (
+                        <div className="aspect-[4/3] flex items-center justify-center" style={{ background: getGradientBg(w.title) }}>
+                          <span className="material-symbols-outlined text-white/60 text-[32px]">image</span>
+                        </div>
+                      )}
                       <div className="p-3">
                         <p className="font-semibold text-sm text-on-surface truncate">{w.title}</p>
-                        <p className="text-xs text-on-surface-variant/60 line-clamp-2 mt-1">{w.description}</p>
+                        <p className="text-xs text-on-surface-variant/60 line-clamp-1 mt-0.5">{w.description}</p>
                         {w.price > 0 && <p className="text-xs font-semibold text-primary mt-2">¥{w.price}</p>}
                       </div>
                     </div>
                   ))}
+                  {/* 添加作品按钮 */}
+                  <div onClick={() => navigate('/publish-work')}
+                    className="card aspect-[4/3] flex flex-col items-center justify-center gap-1 text-on-surface-variant/40 active:scale-[0.97] transition-all cursor-pointer border-2 border-dashed border-[#f0edea] shadow-none">
+                    <span className="material-symbols-outlined text-[32px]">add</span>
+                    <span className="text-xs">发布作品</span>
+                  </div>
                 </div>
               )}
             </div>
