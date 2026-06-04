@@ -35,18 +35,34 @@ export default function TopBar() {
   const shouldHide = hidePaths.some((p) => location.pathname.startsWith(p) && location.pathname.length > p.length);
 
   // 未读通知数
-  useEffect(() => {
+  const fetchNotifCount = () => {
     if (!user) return
     supabase.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("read", false).then(({ count }) => {
       if (count !== null) setNotifCount(count)
     })
+  }
+
+  useEffect(() => {
+    fetchNotifCount()
 
     const channel = supabase.channel('notif-count')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, () => {
-        setNotifCount((c) => c + 1)
-      })
+      .on('postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
+        () => fetchNotifCount()
+      )
+      .on('postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
+        () => fetchNotifCount()
+      )
       .subscribe()
-    return () => supabase.removeChannel(channel)
+
+    // 回到前台时刷新
+    const onFocus = () => fetchNotifCount()
+    window.addEventListener('focus', onFocus)
+    return () => {
+      supabase.removeChannel(channel)
+      window.removeEventListener('focus', onFocus)
+    }
   }, [user?.id])
 
   useEffect(() => {
