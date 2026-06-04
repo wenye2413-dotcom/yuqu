@@ -6,12 +6,11 @@ body {
   -webkit-tap-highlight-color: transparent;
   font-family: "Be Vietnam Pro", sans-serif;
   margin: 0;
-  /* iOS 上确保输入框可以接收触摸事件 */
   -webkit-user-select: text;
   user-select: text;
+  background: #fcf9f8;
 }
 
-/* iOS 输入框修复：确保 input/textarea 可以弹出键盘 */
 input, textarea, [contenteditable] {
   -webkit-user-select: text !important;
   user-select: text !important;
@@ -19,13 +18,26 @@ input, textarea, [contenteditable] {
   touch-action: manipulation;
 }
 
-::-webkit-scrollbar {
-  display: none;
+::-webkit-scrollbar { display: none; }
+* { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* 卡片通用样式 */
+.card {
+  @apply bg-white rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] border border-[#f0edea];
 }
 
-* {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+.card-hover {
+  @apply active:scale-[0.98] transition-all cursor-pointer;
+}
+
+/* 按钮通用 */
+.btn-primary {
+  @apply bg-[#95490d] text-white font-semibold rounded-full active:scale-95 transition-all disabled:opacity-40;
+}
+
+/* 渐变文本 */
+.gradient-text {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-[#95490d] to-[#356668];
 }
 
 .masonry-grid {

@@ -43,6 +43,15 @@ export default function TopBar() {
     })
   }
 
+  // 路由变化时刷新（离开通知页回到主页面时）
+  const prevPath = useRef(location.pathname)
+  useEffect(() => {
+    if (prevPath.current !== location.pathname) {
+      prevPath.current = location.pathname
+      fetchNotifCount()
+    }
+  })
+
   useEffect(() => {
     fetchNotifCount()
 
@@ -57,8 +66,7 @@ export default function TopBar() {
       )
       .subscribe()
 
-    // 每5秒轮询（Realtime 不可靠时后备）
-    const timer = setInterval(fetchNotifCount, 5000)
+    const timer = setInterval(fetchNotifCount, 3000)
     const onFocus = () => fetchNotifCount()
     window.addEventListener('focus', onFocus)
     return () => {
@@ -114,7 +122,9 @@ export default function TopBar() {
               className="relative text-on-surface-variant hover:bg-surface-container-low/50 rounded-full p-2 transition-colors">
               <span className="material-symbols-outlined text-[22px]">notifications</span>
               {notifCount > 0 && (
-                <span className="absolute top-1 right-1 w-2 h-2 bg-error rounded-full" />
+                <span className="absolute -top-0.5 -right-0.5 bg-error text-white text-[10px] font-bold min-w-[16px] h-4 flex items-center justify-center rounded-full px-1 shadow">
+                  {notifCount > 99 ? '99+' : notifCount}
+                </span>
               )}
             </button>
             <div className="relative" ref={menuRef}>
