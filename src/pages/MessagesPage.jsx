@@ -707,8 +707,9 @@ export default function MessagesPage() {
       </div>
 
       {/* 底部统一输入框 */}
+      {/* 底部统一输入框 */}
       <div className="fixed left-0 right-0 z-[60] bg-white border-t border-surface-variant/20 px-4 py-3 shadow-[0_-2px_8px_rgba(0,0,0,0.06)]"
-        style={{ bottom: keyboardHeight > 20 ? keyboardHeight : '80px', paddingBottom: '0.75rem' }}>
+        style={{ bottom: keyboardHeight > 50 ? keyboardHeight : '80px' }}>
         <div className="flex items-center gap-2">
           {/* 回复上下文提示 */}
           {replyingTo && (
