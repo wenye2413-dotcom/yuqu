@@ -20,7 +20,8 @@ export function formatDistance(meters) {
 }
 
 export function useLocation() {
-  const [location, setLocation] = useState(null)
+  const [location, setLocation] = useState(null)   // { lat, lng }
+  const [accuracy, setAccuracy] = useState(null)    // 精度（米）
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(true)
   const [permissionDenied, setPermissionDenied] = useState(false)
@@ -39,6 +40,7 @@ export function useLocation() {
       (pos) => {
         clearTimeout(timeoutTimer)
         setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude })
+        setAccuracy(pos.coords.accuracy)
         setLoading(false)
         setPermissionDenied(false)
       },
@@ -49,6 +51,7 @@ export function useLocation() {
           navigator.geolocation.getCurrentPosition(
             (pos) => {
               setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude })
+              setAccuracy(pos.coords.accuracy)
               setLoading(false)
               setPermissionDenied(false)
             },
@@ -92,5 +95,5 @@ export function useLocation() {
     }
   }, [requestLocation])
 
-  return { location, error, loading, permissionDenied, requestLocation }
+  return { location, accuracy, error, loading, permissionDenied, requestLocation }
 }

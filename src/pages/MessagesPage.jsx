@@ -148,7 +148,7 @@ export default function MessagesPage() {
   const [activeDateLabel, setActiveDateLabel] = useState("");
 
   // 位置相关 — GPS定位 + 查看位置
-  const { location, loading: locLoading, error: locError, permissionDenied, requestLocation } = useLocation()
+  const { location, accuracy, loading: locLoading, error: locError, permissionDenied, requestLocation } = useLocation()
   // GPS定位成功后默认查看位置=GPS位置
   useEffect(() => {
     if (location && !viewLocation) {
@@ -507,6 +507,9 @@ export default function MessagesPage() {
             <span className="text-[10px] text-on-surface-variant/40">
               距你 {formatDistance(calcDistance(viewLocation.lat, viewLocation.lng, location.lat, location.lng))}
             </span>
+          )}
+          {accuracy && accuracy > 500 && (
+            <span className="text-[10px] text-amber-500/70">定位精度±{Math.round(accuracy)}m 偏低，可手动修正</span>
           )}
           <div className="flex-1" />
           <button onClick={() => setShowRadiusPicker(!showRadiusPicker)}
