@@ -4,8 +4,9 @@ import { AnimatePresence, motion } from "framer-motion"
 import Avatar from "../common/Avatar"
 
 const menuItems = [
-  { icon: 'groups', label: '我的群组', key: 'my-groups' },
-  { icon: 'event', label: '我的活动', key: 'my-events' },
+  { icon: 'notifications', label: '通知', key: 'notifications' },
+  { icon: 'groups', label: '群组', key: 'groups' },
+  { icon: 'event', label: '活动', key: 'events' },
   { icon: 'edit', label: '编辑资料', key: 'edit-profile' },
   { icon: 'settings', label: '设置', key: 'settings' },
 ]
@@ -17,10 +18,13 @@ export default function Sidebar({ open, onClose }) {
   const handleClick = (key) => {
     onClose()
     switch (key) {
-      case 'my-groups':
+      case 'notifications':
+        navigate('/notifications')
+        break
+      case 'groups':
         navigate('/groups')
         break
-      case 'my-events':
+      case 'events':
         navigate('/profile')
         break
       case 'edit-profile':

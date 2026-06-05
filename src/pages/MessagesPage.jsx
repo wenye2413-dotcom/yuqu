@@ -87,6 +87,7 @@ export default function MessagesPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
   const [showEmoji, setShowEmoji] = useState(false);
+  const [pendingImages, setPendingImages] = useState([]);
   const scrollRef = useRef(null);
   const pullStartY = useRef(0);
   const isPulling = useRef(false);
@@ -496,9 +497,9 @@ export default function MessagesPage() {
         {/* 顶部：经纬度 + 半径 + 刷新/时间 */}
         <div className="flex items-center gap-2 pt-2 pb-2">
           <button onClick={() => setShowLocPicker(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/5 text-primary rounded-full text-xs font-medium border border-primary/10 truncate max-w-[180px]">
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/5 text-primary rounded-full text-[11px] font-medium border border-primary/10 max-w-[220px] overflow-hidden">
             <span className="material-symbols-outlined text-[12px]">crosshair</span>
-            {viewLocation ? `${viewLocation.lat.toFixed(4)}, ${viewLocation.lng.toFixed(4)}` : '定位中...'}
+            <span className="truncate">{viewLocation ? `${viewLocation.lat.toFixed(6)}, ${viewLocation.lng.toFixed(6)}` : '定位中...'}</span>
           </button>
           {viewLocation && location && (
             <span className="text-[10px] text-on-surface-variant/40 shrink-0">
@@ -533,7 +534,10 @@ export default function MessagesPage() {
 
         {/* 地点搜索框 */}
         {showLocPicker && (
-          <div className="mb-3 p-3 bg-surface-container-low rounded-xl border border-outline-variant/30">
+          <div className="mb-3 p-3 bg-surface-container-low rounded-xl border border-outline-variant/30 relative">
+            <button onClick={() => setShowLocPicker(false)} className="absolute -top-1 -right-1 w-5 h-5 bg-white rounded-full shadow-sm flex items-center justify-center text-on-surface-variant/50">
+              <span className="material-symbols-outlined text-[14px]">close</span>
+            </button>
             <div className="flex gap-2 mb-2">
               <input type="text" value={locSearch} onChange={e => setLocSearch(e.target.value)}
                 placeholder="搜索地点或输入坐标"
@@ -757,22 +761,52 @@ export default function MessagesPage() {
 
       <div className="shrink-0 h-20" />
 
+      {/* 图片选择预览 — 选图后显示确认发送 */}
+      {pendingImages.length > 0 && (
+        <div className="fixed inset-0 z-[80] bg-black/50 flex items-end justify-center" onClick={() => setPendingImages([])}>
+          <div className="w-full max-w-md bg-white rounded-t-2xl p-4 pb-8" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-3">
+              <span className="font-semibold text-sm text-on-surface">已选择 {pendingImages.length} 张图片</span>
+              <button onClick={() => setPendingImages([])} className="text-sm text-on-surface-variant/60">取消</button>
+            </div>
+            <div className="grid grid-cols-3 gap-2 mb-4 max-h-48 overflow-y-auto">
+              {pendingImages.map((img, i) => (
+                <div key={i} className="aspect-square rounded-xl overflow-hidden bg-surface-variant">
+                  <img src={img.preview} alt="" className="w-full h-full object-cover" />
+                </div>
+              ))}
+            </div>
+            <button onClick={async () => {
+              for (const img of pendingImages) {
+                const ext = img.file.name.split('.').pop()
+                const path = `post_images/${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+                const { error } = await supabase.storage.from('images').upload(path, img.file)
+                if (error) { toast('上传失败: ' + error.message, 'error'); continue }
+                const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(path)
+                // 逐张发送
+                setNewMessage(`![](${publicUrl})`)
+                await new Promise(r => setTimeout(r, 50))
+              }
+              setPendingImages([])
+              handleSendNewMessage()
+            }}
+              className="w-full py-3.5 bg-[#95490d] text-white rounded-full text-sm font-medium active:scale-95 transition-all">
+              发送 {pendingImages.length} 张图片
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* FAB — 发图片 */}
-      <button onClick={async () => {
+      <button onClick={() => {
         const input = document.createElement('input')
         input.type = 'file'
         input.accept = 'image/*'
-        input.onchange = async (e) => {
-          const file = e.target.files?.[0]
-          if (!file) return
-          const ext = file.name.split('.').pop()
-          const path = `post_images/${user.id}/${Date.now()}.${ext}`
-          const { error } = await supabase.storage.from('images').upload(path, file)
-          if (error) { toast('上传失败: ' + error.message, 'error'); return }
-          const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(path)
-          // 把图片 URL 当作消息内容发送
-          setNewMessage(`![](${publicUrl})`)
-          setTimeout(() => handleSendNewMessage(), 100)
+        input.multiple = true
+        input.onchange = (e) => {
+          const files = Array.from(e.target.files || [])
+          if (!files.length) return
+          setPendingImages(files.map(f => ({ file: f, preview: URL.createObjectURL(f) })))
         }
         input.click()
       }}
