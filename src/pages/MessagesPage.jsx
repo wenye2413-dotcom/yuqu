@@ -242,10 +242,11 @@ export default function MessagesPage() {
         if (focusPostId && postsWithReplies.find(p => p.id === focusPostId)) {
           setExpandedId(focusPostId)
         }
-        // 滚动到底部（显示最新消息）
+        // 仅在用户已在底部时自动滚动到最新消息
         setTimeout(() => {
-          if (scrollRef.current) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+          const el = scrollRef.current
+          if (el && el.scrollHeight - el.scrollTop - el.clientHeight < 80) {
+            el.scrollTop = el.scrollHeight
           }
         }, 100)
       });
@@ -520,15 +521,12 @@ export default function MessagesPage() {
           </div>
         </div>
 
-        {/* 半径 + 时间标签 */}
+        {/* 半径 */}
         <div className="flex items-center gap-2 pb-2">
           <button onClick={() => setShowRadiusPicker(!showRadiusPicker)}
             className="flex items-center gap-1 px-2.5 py-1 bg-primary/10 text-primary rounded-full text-[11px] font-medium">
             <span className="material-symbols-outlined text-[12px]">radio_button_checked</span>
             {radius >= 1000 ? `${radius / 1000}km` : `${radius}m`}
-          </button>
-          <button onClick={() => setFilterOpen(true)} className="text-[11px] text-on-surface-variant/50 hover:text-on-surface-variant transition-colors">
-            {activeDateLabel || activeTime}
           </button>
         </div>
 
