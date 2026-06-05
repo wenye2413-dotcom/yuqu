@@ -71,8 +71,7 @@ export default function MessagesPage() {
   const [expandedId, setExpandedId] = useState(null);
   const [viewLocation, setViewLocation] = useState(null);    // 当前查看位置（默认=GPS）
   const [showLocPicker, setShowLocPicker] = useState(false);
-  const [locInputLat, setLocInputLat] = useState("");
-  const [locInputLng, setLocInputLng] = useState("");
+  const [locSearch, setLocSearch] = useState("");
 
   const [newPostIds, setNewPostIds] = useState([]);
 
@@ -153,8 +152,6 @@ export default function MessagesPage() {
   useEffect(() => {
     if (location && !viewLocation) {
       setViewLocation(location)
-      setLocInputLat(location.lat.toFixed(6))
-      setLocInputLng(location.lng.toFixed(6))
     }
   }, [location])
   const [radius, setRadius] = useState(100)        // 默认100米
@@ -496,77 +493,83 @@ export default function MessagesPage() {
             <span className="text-xs text-primary ml-2">刷新中...</span>
           </div>
         )}
-        {/* 当前查看位置 — 点击可切换 */}
+        {/* 顶部：经纬度 + 半径 + 刷新/时间 */}
         <div className="flex items-center gap-2 pt-2 pb-2">
-          <button onClick={() => { if (viewLocation) { setLocInputLat(viewLocation.lat.toFixed(6)); setLocInputLng(viewLocation.lng.toFixed(6)) }; setShowLocPicker(true) }}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/5 text-primary rounded-full text-xs font-medium border border-primary/10">
-            <span className="material-symbols-outlined text-[14px]">crosshair</span>
+          <button onClick={() => setShowLocPicker(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/5 text-primary rounded-full text-xs font-medium border border-primary/10 truncate max-w-[180px]">
+            <span className="material-symbols-outlined text-[12px]">crosshair</span>
             {viewLocation ? `${viewLocation.lat.toFixed(4)}, ${viewLocation.lng.toFixed(4)}` : '定位中...'}
           </button>
           {viewLocation && location && (
-            <span className="text-[10px] text-on-surface-variant/40">
-              距你 {formatDistance(calcDistance(viewLocation.lat, viewLocation.lng, location.lat, location.lng))}
+            <span className="text-[10px] text-on-surface-variant/40 shrink-0">
+              距你{formatDistance(calcDistance(viewLocation.lat, viewLocation.lng, location.lat, location.lng))}
             </span>
           )}
           {accuracy && accuracy > 500 && (
-            <span className="text-[10px] text-amber-500/70">定位精度±{Math.round(accuracy)}m 偏低，可手动修正</span>
+            <span className="text-[10px] text-amber-500/70 shrink-0">±{Math.round(accuracy)}m</span>
           )}
           <div className="flex-1" />
+          <div className="flex items-center gap-2">
+            <button onClick={handleRefresh} disabled={refreshing} className="text-on-surface-variant/60 hover:text-primary transition-colors p-1">
+              <span className={`material-symbols-outlined text-[18px] ${refreshing ? 'animate-spin' : ''}`}>refresh</span>
+            </button>
+            <button onClick={() => setFilterOpen(true)} className="text-on-surface-variant/60 hover:text-primary transition-colors p-1">
+              <span className="material-symbols-outlined text-[18px]">tune</span>
+            </button>
+          </div>
+        </div>
+
+        {/* 半径 + 时间标签 */}
+        <div className="flex items-center gap-2 pb-2">
           <button onClick={() => setShowRadiusPicker(!showRadiusPicker)}
-            className="flex items-center gap-1 px-2.5 py-1.5 bg-primary/10 text-primary rounded-full text-[11px] font-medium">
+            className="flex items-center gap-1 px-2.5 py-1 bg-primary/10 text-primary rounded-full text-[11px] font-medium">
             <span className="material-symbols-outlined text-[12px]">radio_button_checked</span>
             {radius >= 1000 ? `${radius / 1000}km` : `${radius}m`}
           </button>
+          <button onClick={() => setFilterOpen(true)} className="text-[11px] text-on-surface-variant/50 hover:text-on-surface-variant transition-colors">
+            {activeDateLabel || activeTime}
+          </button>
         </div>
 
-        {/* 地点切换弹窗 */}
+        {/* 地点搜索框 */}
         {showLocPicker && (
           <div className="mb-3 p-3 bg-surface-container-low rounded-xl border border-outline-variant/30">
             <div className="flex gap-2 mb-2">
-              <input type="text" value={locInputLat} onChange={e => setLocInputLat(e.target.value)}
-                placeholder="纬度" className="flex-1 bg-white rounded-lg px-3 py-2 text-xs outline-none border border-outline-variant/30 font-mono" />
-              <input type="text" value={locInputLng} onChange={e => setLocInputLng(e.target.value)}
-                placeholder="经度" className="flex-1 bg-white rounded-lg px-3 py-2 text-xs outline-none border border-outline-variant/30 font-mono" />
-              <button onClick={() => { setViewLocation({ lat: parseFloat(locInputLat), lng: parseFloat(locInputLng) }); setShowLocPicker(false) }}
-                disabled={!locInputLat || !locInputLng}
-                className="px-3 py-2 bg-primary text-white rounded-lg text-xs font-medium disabled:opacity-40">跳转</button>
+              <input type="text" value={locSearch} onChange={e => setLocSearch(e.target.value)}
+                placeholder="搜索地点或输入坐标"
+                className="flex-1 bg-white rounded-lg px-3 py-2.5 text-xs outline-none border border-outline-variant/30"
+                onKeyDown={async (e) => {
+                  if (e.key === 'Enter' && locSearch.trim()) {
+                    // 尝试解析坐标
+                    const coord = locSearch.match(/(-?\d+\.?\d*)\s*[,，]\s*(-?\d+\.?\d*)/)
+                    if (coord) {
+                      setViewLocation({ lat: parseFloat(coord[1]), lng: parseFloat(coord[2]) })
+                      setShowLocPicker(false)
+                      return
+                    }
+                    // 调用 Nominatim API 搜索
+                    try {
+                      const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locSearch)}&limit=5`)
+                      const data = await r.json()
+                      if (data?.[0]) {
+                        setViewLocation({ lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) })
+                        setShowLocPicker(false)
+                      }
+                    } catch {}
+                  }
+                }} />
             </div>
             <div className="flex gap-2">
-              <button onClick={() => { if (location) { setViewLocation(location); setLocInputLat(location.lat.toFixed(6)); setLocInputLng(location.lng.toFixed(6)) }; setShowLocPicker(false) }}
+              <button onClick={() => { if (location) { setViewLocation(location) }; setShowLocPicker(false) }}
                 className="text-xs text-primary/70">回到我的位置</button>
               <span className="text-xs text-on-surface-variant/30">|</span>
               <button onClick={() => requestLocation()} className="text-xs text-primary/70">刷新定位</button>
+              <span className="text-xs text-on-surface-variant/30">|</span>
+              <button onClick={() => { const c = prompt('输入经纬度（格式: lat, lng）:'); if (c) { const m = c.match(/(-?\d+\.?\d*)\s*[,，]\s*(-?\d+\.?\d*)/); if (m) { setViewLocation({ lat: parseFloat(m[1]), lng: parseFloat(m[2]) }); setShowLocPicker(false) } } }}
+                className="text-xs text-primary/70">输入坐标</button>
             </div>
           </div>
         )}
-
-        <div className="flex justify-between items-center pb-3">
-          <div className="flex items-center gap-2">
-            {/* 当前半径 — 可点击切换 */}
-            <button onClick={() => setShowRadiusPicker(!showRadiusPicker)}
-              className="flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-semibold">
-              <span className="material-symbols-outlined text-[14px]">my_location</span>
-              {radius >= 1000 ? `${radius / 1000}km` : `${radius}m`}
-            </button>
-            {/* 时间筛选 */}
-            <span className="text-xs text-on-surface-variant/60">{activeDateLabel || activeTime}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            {/* 定位状态 */}
-            {locLoading && <span className="material-symbols-outlined text-on-surface-variant/40 text-[16px] animate-spin">location_searching</span>}
-            {permissionDenied && (
-              <button onClick={requestLocation} className="text-xs text-red-400" title="定位被拒绝，点击重试">
-                <span className="material-symbols-outlined text-[16px]">location_off</span>
-              </button>
-            )}
-            <button onClick={handleRefresh} disabled={refreshing} className="text-primary hover:opacity-80 transition-opacity p-1">
-              <span className={`material-symbols-outlined text-[20px] ${refreshing ? 'animate-spin' : ''}`}>refresh</span>
-            </button>
-            <button onClick={() => setFilterOpen(true)} className="text-primary hover:opacity-80 transition-opacity p-1">
-              <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>tune</span>
-            </button>
-          </div>
-        </div>
 
         {/* 半径滑块 */}
         {showRadiusPicker && (
