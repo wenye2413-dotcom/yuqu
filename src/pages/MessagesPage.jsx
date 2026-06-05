@@ -495,29 +495,31 @@ export default function MessagesPage() {
             <span className="text-xs text-primary ml-2">刷新中...</span>
           </div>
         )}
-        {/* 顶部：经纬度（左）+ 半径 + 刷新（右） */}
-        <div className="flex items-center gap-2 pt-2 pb-2">
-          <button onClick={() => setShowLocPicker(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/5 text-primary rounded-full text-[11px] font-medium border border-primary/10 flex-1 min-w-0 overflow-hidden">
-            <span className="material-symbols-outlined text-[12px] shrink-0">crosshair</span>
-            <span className="truncate">{viewLocation ? `${viewLocation.lat.toFixed(6)}, ${viewLocation.lng.toFixed(6)}` : '定位中...'}</span>
-          </button>
+        {/* 顶部：经纬度（独占一行）+ 半径 + 刷新 */}
+        <div className="pt-2 pb-1">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="flex-1 min-w-0">
+              <button onClick={() => setShowLocPicker(true)}
+                className="w-full text-left flex items-center gap-1.5 px-3 py-2 bg-primary/5 text-primary rounded-full text-[12px] font-medium border border-primary/10">
+                <span className="material-symbols-outlined text-[14px] shrink-0">📍</span>
+                <span className="font-mono">{viewLocation ? `${viewLocation.lat.toFixed(6)}, ${viewLocation.lng.toFixed(6)}` : '定位中...'}</span>
+              </button>
+            </div>
+            <button onClick={() => setShowRadiusPicker(!showRadiusPicker)}
+              className="shrink-0 flex items-center gap-1 px-3 py-2 bg-primary/10 text-primary rounded-full text-[12px] font-medium">
+              <span className="material-symbols-outlined text-[12px]">radio_button_checked</span>
+              {radius >= 1000 ? `${radius / 1000}km` : `${radius}m`}
+            </button>
+            <button onClick={handleRefresh} disabled={refreshing} className="shrink-0 text-on-surface-variant/60 hover:text-primary transition-colors p-1">
+              <span className={`material-symbols-outlined text-[18px] ${refreshing ? 'animate-spin' : ''}`}>refresh</span>
+            </button>
+          </div>
           {viewLocation && location && (
-            <span className="text-[10px] text-on-surface-variant/40 shrink-0">
-              {formatDistance(calcDistance(viewLocation.lat, viewLocation.lng, location.lat, location.lng))}
-            </span>
+            <p className="text-[10px] text-on-surface-variant/40 px-1">
+              距你 {formatDistance(calcDistance(viewLocation.lat, viewLocation.lng, location.lat, location.lng))}
+              {accuracy && accuracy > 500 && ` · 精度±${Math.round(accuracy)}m`}
+            </p>
           )}
-          {accuracy && accuracy > 500 && (
-            <span className="text-[10px] text-amber-500/70 shrink-0">±{Math.round(accuracy)}m</span>
-          )}
-          <button onClick={() => setShowRadiusPicker(!showRadiusPicker)}
-            className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 bg-primary/10 text-primary rounded-full text-[11px] font-medium">
-            <span className="material-symbols-outlined text-[12px]">radio_button_checked</span>
-            {radius >= 1000 ? `${radius / 1000}km` : `${radius}m`}
-          </button>
-          <button onClick={handleRefresh} disabled={refreshing} className="shrink-0 text-on-surface-variant/60 hover:text-primary transition-colors p-1">
-            <span className={`material-symbols-outlined text-[18px] ${refreshing ? 'animate-spin' : ''}`}>refresh</span>
-          </button>
         </div>
 
         {/* 地点搜索框 */}
