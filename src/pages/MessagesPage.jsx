@@ -69,6 +69,10 @@ export default function MessagesPage() {
   const [profiles, setProfiles] = useState({});
   const [filterOpen, setFilterOpen] = useState(false);
   const [expandedId, setExpandedId] = useState(null);
+  const [viewLocation, setViewLocation] = useState(null);    // 当前查看位置（默认=GPS）
+  const [showLocPicker, setShowLocPicker] = useState(false);
+  const [locInputLat, setLocInputLat] = useState("");
+  const [locInputLng, setLocInputLng] = useState("");
 
   const [newPostIds, setNewPostIds] = useState([]);
 
@@ -143,8 +147,16 @@ export default function MessagesPage() {
   const [activeTime, setActiveTime] = useState("今天");
   const [activeDateLabel, setActiveDateLabel] = useState("");
 
-  // 位置相关
+  // 位置相关 — GPS定位 + 查看位置
   const { location, loading: locLoading, error: locError, permissionDenied, requestLocation } = useLocation()
+  // GPS定位成功后默认查看位置=GPS位置
+  useEffect(() => {
+    if (location && !viewLocation) {
+      setViewLocation(location)
+      setLocInputLat(location.lat.toFixed(6))
+      setLocInputLng(location.lng.toFixed(6))
+    }
+  }, [location])
   const [radius, setRadius] = useState(100)        // 默认100米
   const [showRadiusPicker, setShowRadiusPicker] = useState(false)
 
@@ -212,8 +224,8 @@ export default function MessagesPage() {
         });
 
         const postsWithReplies = postsData.map((p) => {
-          const d = (p.latitude && p.longitude && location)
-            ? calcDistance(location.lat, location.lng, p.latitude, p.longitude)
+          const d = (p.latitude && p.longitude && viewLocation)
+            ? calcDistance(viewLocation.lat, viewLocation.lng, p.latitude, p.longitude)
             : null
           return {
             id: p.id,
@@ -444,8 +456,8 @@ export default function MessagesPage() {
 
   const filteredPosts = posts.filter((p) => {
     if (!isInTimeRange(p.created_at)) return false
-    // 有位置数据时按半径过滤，没位置数据时显示
-    if (location && p.distance !== null) {
+    // 有位置数据时按查看位置半径过滤
+    if (viewLocation && p.distance !== null) {
       return p.distance <= radius
     }
     return true
@@ -484,7 +496,48 @@ export default function MessagesPage() {
             <span className="text-xs text-primary ml-2">刷新中...</span>
           </div>
         )}
-        <div className="flex justify-between items-center pt-2 pb-3">
+        {/* 当前查看位置 — 点击可切换 */}
+        <div className="flex items-center gap-2 pt-2 pb-2">
+          <button onClick={() => { if (viewLocation) { setLocInputLat(viewLocation.lat.toFixed(6)); setLocInputLng(viewLocation.lng.toFixed(6)) }; setShowLocPicker(true) }}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/5 text-primary rounded-full text-xs font-medium border border-primary/10">
+            <span className="material-symbols-outlined text-[14px]">crosshair</span>
+            {viewLocation ? `${viewLocation.lat.toFixed(4)}, ${viewLocation.lng.toFixed(4)}` : '定位中...'}
+          </button>
+          {viewLocation && location && (
+            <span className="text-[10px] text-on-surface-variant/40">
+              距你 {formatDistance(calcDistance(viewLocation.lat, viewLocation.lng, location.lat, location.lng))}
+            </span>
+          )}
+          <div className="flex-1" />
+          <button onClick={() => setShowRadiusPicker(!showRadiusPicker)}
+            className="flex items-center gap-1 px-2.5 py-1.5 bg-primary/10 text-primary rounded-full text-[11px] font-medium">
+            <span className="material-symbols-outlined text-[12px]">radio_button_checked</span>
+            {radius >= 1000 ? `${radius / 1000}km` : `${radius}m`}
+          </button>
+        </div>
+
+        {/* 地点切换弹窗 */}
+        {showLocPicker && (
+          <div className="mb-3 p-3 bg-surface-container-low rounded-xl border border-outline-variant/30">
+            <div className="flex gap-2 mb-2">
+              <input type="text" value={locInputLat} onChange={e => setLocInputLat(e.target.value)}
+                placeholder="纬度" className="flex-1 bg-white rounded-lg px-3 py-2 text-xs outline-none border border-outline-variant/30 font-mono" />
+              <input type="text" value={locInputLng} onChange={e => setLocInputLng(e.target.value)}
+                placeholder="经度" className="flex-1 bg-white rounded-lg px-3 py-2 text-xs outline-none border border-outline-variant/30 font-mono" />
+              <button onClick={() => { setViewLocation({ lat: parseFloat(locInputLat), lng: parseFloat(locInputLng) }); setShowLocPicker(false) }}
+                disabled={!locInputLat || !locInputLng}
+                className="px-3 py-2 bg-primary text-white rounded-lg text-xs font-medium disabled:opacity-40">跳转</button>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => { if (location) { setViewLocation(location); setLocInputLat(location.lat.toFixed(6)); setLocInputLng(location.lng.toFixed(6)) }; setShowLocPicker(false) }}
+                className="text-xs text-primary/70">回到我的位置</button>
+              <span className="text-xs text-on-surface-variant/30">|</span>
+              <button onClick={() => requestLocation()} className="text-xs text-primary/70">刷新定位</button>
+            </div>
+          </div>
+        )}
+
+        <div className="flex justify-between items-center pb-3">
           <div className="flex items-center gap-2">
             {/* 当前半径 — 可点击切换 */}
             <button onClick={() => setShowRadiusPicker(!showRadiusPicker)}

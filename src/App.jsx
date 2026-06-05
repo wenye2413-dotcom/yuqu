@@ -23,8 +23,6 @@ import PublishEventPage from "./pages/PublishEventPage";
 import PublishWorkPage from "./pages/PublishWorkPage";
 import GroupSettingsPage from "./pages/GroupSettingsPage";
 import NotificationsPage from "./pages/NotificationsPage";
-import LocationChatsPage from "./pages/LocationChatsPage";
-import LocationChatRoomPage from "./pages/LocationChatRoomPage";
 import { ToastProvider } from "./hooks/useToast";
 import { supabase } from "./supabaseClient";
 import { AuthProvider, useAuth } from "./context/AuthContext";
@@ -92,8 +90,6 @@ function AppRoutes() {
       <Route path="/publish-event" element={<PublishEventPage />} />
       <Route path="/publish-work" element={<PublishWorkPage />} />
       <Route path="/notifications" element={<NotificationsPage />} />
-      <Route path="/location-chats" element={<LocationChatsPage />} />
-      <Route path="/location-chat/:chatId" element={<LocationChatRoomPage />} />
     </Routes>
   );
 }

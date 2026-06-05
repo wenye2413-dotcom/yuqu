@@ -2,7 +2,7 @@ import { useLocation } from "react-router-dom";
 import TopBar from "./TopBar";
 import BottomNav from "./BottomNav";
 
-const tabPaths = ["/messages", "/location-chats", "/groups", "/discovery", "/profile"];
+const tabPaths = ["/messages", "/groups", "/discovery", "/profile"];
 
 export default function MobileLayout({ children }) {
   const location = useLocation();
