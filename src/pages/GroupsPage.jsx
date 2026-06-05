@@ -276,14 +276,14 @@ export default function GroupsPage() {
                       <p className="text-xs text-on-surface-variant/70 truncate">{g.desc || g.lastMessage || ""}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-[10px] text-on-surface-variant/50">{g.memberCount || 0} 人</span>
-                        {joined && <span className="text-[10px] text-bamboo-600 font-medium">已加入</span>}
+                        {joined && <span className="text-[10px] text-forest-600 font-medium">已加入</span>}
                       </div>
                     </div>
                     <button onClick={(e) => handleJoin(e, g)}
                       className={`shrink-0 px-4 py-1.5 rounded-full text-xs font-medium ${
-                        joined ? 'bg-bamboo-50 text-bamboo-700' :
+                        joined ? 'bg-forest-50 text-forest-700' :
                         applied ? 'bg-secondary/10 text-secondary' :
-                        'bg-[#95490d] text-white'
+                        'bg-[#2d7d4e] text-white'
                       }`}>
                       {joined ? '进入' : applied ? '已申请' : '加入'}
                     </button>
@@ -433,7 +433,7 @@ export default function GroupsPage() {
                     公开群组
                   </label>
                   <button onClick={handleCreate} disabled={creating || !createName.trim()}
-                    className="w-full py-3.5 bg-[#95490d] text-white rounded-full text-sm font-medium disabled:opacity-40 active:scale-95 transition-all">
+                    className="w-full py-3.5 bg-[#2d7d4e] text-white rounded-full text-sm font-medium disabled:opacity-40 active:scale-95 transition-all">
                     {creating ? "创建中..." : "创建群组"}
                   </button>
                 </div>

@@ -45,7 +45,7 @@ export const users = {
     energy: 720,
     level: "craftsman",
     contribution: 48,
-    coverGradient: "from-[#ff9d5c] to-[#95490d]",
+    coverGradient: "from-[#ff9d5c] to-[#2d7d4e]",
   },
   u1: {
     id: "u1",
@@ -77,7 +77,7 @@ export const users = {
     energy: 45,
     level: "novice",
     contribution: 5,
-    coverGradient: "from-[#ff9d5c] to-[#95490d]",
+    coverGradient: "from-[#ff9d5c] to-[#2d7d4e]",
   },
   u3: {
     id: "u3",
@@ -141,7 +141,7 @@ export const users = {
     energy: 2800,
     level: "partner",
     contribution: 90,
-    coverGradient: "from-[#ffb68a] to-[#95490d]",
+    coverGradient: "from-[#ffb68a] to-[#2d7d4e]",
   },
   u7: {
     id: "u7",

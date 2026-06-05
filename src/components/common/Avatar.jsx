@@ -1,14 +1,14 @@
 import { useState } from "react"
 
 const COLORS = [
-  ['#ff9d5c', '#95490d'],
-  ['#b9ecee', '#356668'],
-  ['#ffdbc8', '#ff9d5c'],
-  ['#c9c6be', '#605e58'],
-  ['#e8def8', '#6750a4'],
-  ['#d0f4de', '#2d6a4f'],
-  ['#ffcdd2', '#c62828'],
-  ['#bbdefb', '#1565c0'],
+  ['#c28a2e', '#7d5517'],
+  ['#2d7d4e', '#173d27'],
+  ['#367cb3', '#1b3f61'],
+  ['#d4a34f', '#5e4013'],
+  ['#6fbc89', '#1d4e31'],
+  ['#7fb5db', '#183450'],
+  ['#e8c78a', '#4a3310'],
+  ['#a3d7b3', '#112e1d'],
 ]
 
 function getColors(name) {

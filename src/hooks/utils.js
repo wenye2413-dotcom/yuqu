@@ -8,11 +8,11 @@ export function getAvatarUrl(name) {
 
 export function getGradientBg(name) {
   const gradients = [
-    "from-[#ff9d5c] to-[#95490d]",
+    "from-[#ff9d5c] to-[#2d7d4e]",
     "from-[#b9ecee] to-[#356668]",
     "from-[#ffdbc8] to-[#ff9d5c]",
     "from-[#c9c6be] to-[#605e58]",
-    "from-[#ffb68a] to-[#95490d]",
+    "from-[#ffb68a] to-[#2d7d4e]",
     "from-[#e6e2d9] to-[#484741]",
   ];
   const hash = name.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
@@ -22,7 +22,7 @@ export function getGradientBg(name) {
 // ============ 太极能量 / 等级系统 ============
 
 export const LEVEL_TIERS = [
-  { id: "novice", minEnergy: 0, name: "普通用户", icon: "eco", badgeColor: "bg-bamboo-100 text-bamboo-700" },
+  { id: "novice", minEnergy: 0, name: "普通用户", icon: "eco", badgeColor: "bg-forest-100 text-forest-700" },
   { id: "warm", minEnergy: 100, name: "热心社友", icon: "whatshot", badgeColor: "bg-secondary/10 text-secondary" },
   { id: "craftsman", minEnergy: 500, name: "社区工匠", icon: "handyman", badgeColor: "bg-primary/10 text-primary" },
   { id: "partner", minEnergy: 2000, name: "共创伙伴", icon: "workspace_premium", badgeColor: "bg-ink-100 text-ink-700" },
@@ -73,7 +73,7 @@ export function getContributionColor(level) {
   const colors = {
     high: "text-primary",
     medium: "text-secondary",
-    low: "text-bamboo-500",
+    low: "text-forest-500",
     none: "text-on-surface-variant/30",
   };
   return colors[level] || colors.none;

@@ -27,7 +27,7 @@ export default function RegisterPage() {
             variables: {
               default: {
                 colors: {
-                  brand: "#95490d",
+                  brand: "#2d7d4e",
                   brandAccent: "#7a3d0b",
                   inputText: "#1c1b1f",
                   inputBackground: "white",
@@ -35,7 +35,7 @@ export default function RegisterPage() {
                   messageText: "#1c1b1f",
                   messageBackground: "#f5f0ff",
                   messageBorder: "#e8def8",
-                  anchorTextColor: "#95490d",
+                  anchorTextColor: "#2d7d4e",
                 },
                 radii: {
                   borderRadiusButton: "9999px",
@@ -48,7 +48,7 @@ export default function RegisterPage() {
                 padding: "16px 24px",
                 fontSize: "14px",
                 fontWeight: "600",
-                background: "#95490d",
+                background: "#2d7d4e",
                 color: "white",
                 borderRadius: "9999px",
               },

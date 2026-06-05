@@ -69,7 +69,7 @@ export default function EventCard({ event, joinStatus = "none", onJoin }) {
 
   return (
     <div className="masonry-item glass-card rounded-DEFAULT p-stack-sm flex flex-col gap-stack-sm ambient-shadow cursor-pointer" onClick={handleClick}>
-      <div className="aspect-video w-full rounded-lg overflow-hidden bg-gradient-to-br from-[#ff9d5c] to-[#95490d] flex items-center justify-center mb-unit">
+      <div className="aspect-video w-full rounded-lg overflow-hidden bg-gradient-to-br from-[#ff9d5c] to-[#2d7d4e] flex items-center justify-center mb-unit">
         <span className="material-symbols-outlined text-white text-4xl">music_note</span>
       </div>
       <div>

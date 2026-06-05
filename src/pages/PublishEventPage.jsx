@@ -53,7 +53,7 @@ export default function PublishEventPage() {
           <span className="font-semibold text-base text-on-surface">发布活动</span>
         </div>
         <button onClick={handlePublish} disabled={publishing || !title.trim() || !eventTime || !desc.trim()}
-          className="px-5 py-2 bg-[#95490d] text-white rounded-full text-sm font-medium disabled:opacity-40 active:scale-95 transition-all">
+          className="px-5 py-2 bg-[#2d7d4e] text-white rounded-full text-sm font-medium disabled:opacity-40 active:scale-95 transition-all">
           {publishing ? "发布中..." : "发布"}
         </button>
       </div>

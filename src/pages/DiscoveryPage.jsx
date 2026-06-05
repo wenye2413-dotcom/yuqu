@@ -78,7 +78,7 @@ export default function DiscoveryPage() {
                 <span className="material-symbols-outlined text-4xl text-on-surface-variant/20">event</span>
                 <p className="text-sm text-on-surface-variant/50 mt-2">{searchQuery ? '没有找到匹配的活动' : '暂无活动'}</p>
                 <button onClick={() => navigate('/publish-event')}
-                  className="mt-4 px-6 py-2.5 bg-[#95490d] text-white rounded-full text-sm font-medium active:scale-95 transition-all">
+                  className="mt-4 px-6 py-2.5 bg-[#2d7d4e] text-white rounded-full text-sm font-medium active:scale-95 transition-all">
                   发起活动
                 </button>
               </div>

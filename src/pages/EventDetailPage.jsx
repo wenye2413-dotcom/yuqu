@@ -144,7 +144,7 @@ export default function EventDetailPage() {
           </div>
         ) : myReg ? (
           <div className={`rounded-2xl p-5 text-center border backdrop-blur ${
-            myReg.status === 'approved' ? 'bg-bamboo-50/80 border-bamboo-200' :
+            myReg.status === 'approved' ? 'bg-forest-50/80 border-forest-200' :
             myReg.status === 'rejected' ? 'bg-red-50/80 border-red-200' :
             'bg-secondary/10 border-secondary/20'
           }`}>
@@ -180,7 +180,7 @@ export default function EventDetailPage() {
                     <Avatar name={reg.user_id} size="w-9 h-9" />
                     <div>
                       <p className="text-sm font-medium text-on-surface">{reg.user_id.substring(0, 8)}...</p>
-                      <p className={`text-xs ${reg.status === 'approved' ? 'text-bamboo-600' : reg.status === 'rejected' ? 'text-red-400' : 'text-secondary'}`}>
+                      <p className={`text-xs ${reg.status === 'approved' ? 'text-forest-600' : reg.status === 'rejected' ? 'text-red-400' : 'text-secondary'}`}>
                         {reg.status === 'pending' ? '待审核' : reg.status === 'approved' ? '已通过' : '已拒绝'}
                       </p>
                     </div>
@@ -188,14 +188,14 @@ export default function EventDetailPage() {
                   {reg.status === 'pending' && (
                     <div className="flex gap-2">
                       <button onClick={() => handleApprove(reg.id)}
-                        className="text-xs px-4 py-1.5 bg-bamboo-500 text-white rounded-full font-medium active:scale-95 transition-all">通过</button>
+                        className="text-xs px-4 py-1.5 bg-forest-500 text-white rounded-full font-medium active:scale-95 transition-all">通过</button>
                       <button onClick={() => handleReject(reg.id)}
                         className="text-xs px-4 py-1.5 bg-red-400 text-white rounded-full font-medium active:scale-95 transition-all">拒绝</button>
                     </div>
                   )}
                   {reg.status !== 'pending' && (
                     <span className={`text-xs px-3 py-1 rounded-full ${
-                      reg.status === 'approved' ? 'bg-bamboo-50 text-bamboo-600' : 'bg-red-50 text-red-400'
+                      reg.status === 'approved' ? 'bg-forest-50 text-forest-600' : 'bg-red-50 text-red-400'
                     }`}>{reg.status === 'approved' ? '已通过' : '已拒绝'}</span>
                   )}
                 </div>

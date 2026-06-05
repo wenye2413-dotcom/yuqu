@@ -61,7 +61,7 @@ export default function LocationChatsPage() {
         <div className="flex items-center justify-between pt-3 pb-4">
           <h2 className="font-headline-lg-mobile font-bold">地点交流</h2>
           <button onClick={() => { setShowCreate(true); requestLocation() }}
-            className="px-4 py-2 bg-[#95490d] text-white rounded-full text-sm font-medium shadow-sm active:scale-95 transition-all">
+            className="px-4 py-2 bg-[#2d7d4e] text-white rounded-full text-sm font-medium shadow-sm active:scale-95 transition-all">
             创建
           </button>
         </div>
@@ -128,7 +128,7 @@ export default function LocationChatsPage() {
               </div>
 
               <button onClick={handleCreate} disabled={creating || !createName.trim() || !createLat || !createLng}
-                className="w-full py-3.5 bg-[#95490d] text-white rounded-full text-sm font-medium disabled:opacity-40 active:scale-95 transition-all">
+                className="w-full py-3.5 bg-[#2d7d4e] text-white rounded-full text-sm font-medium disabled:opacity-40 active:scale-95 transition-all">
                 {creating ? "创建中..." : "创建"}
               </button>
             </div>

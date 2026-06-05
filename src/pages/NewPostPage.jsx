@@ -24,7 +24,7 @@ export default function NewPostPage() {
       distance: "",
       message: text.trim(),
       unread: 0,
-      color: "#95490d",
+      color: "#2d7d4e",
       replies: [],
       images,
     };

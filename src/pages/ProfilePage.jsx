@@ -153,7 +153,7 @@ export default function ProfilePage() {
                   <span className="material-symbols-outlined text-3xl text-on-surface-variant/20">palette</span>
                   <p className="text-sm text-on-surface-variant/50 mt-2">暂无作品</p>
                   <button onClick={() => navigate("/publish-work")}
-                    className="mt-4 px-6 py-2.5 bg-[#95490d] text-white rounded-full text-sm font-medium shadow-sm active:scale-95 transition-all">
+                    className="mt-4 px-6 py-2.5 bg-[#2d7d4e] text-white rounded-full text-sm font-medium shadow-sm active:scale-95 transition-all">
                     发布作品
                   </button>
                 </div>

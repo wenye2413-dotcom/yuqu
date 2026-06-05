@@ -740,7 +740,7 @@ export default function MessagesPage() {
             ref={newMessageBtnRef}
             onClick={handleSendNewMessage}
             disabled={!newMessage.trim() || sendingNewMessage}
-            className="w-9 h-9 flex items-center justify-center bg-[#95490d] text-white rounded-full disabled:opacity-40 shrink-0 transition-all active:scale-90"
+            className="w-9 h-9 flex items-center justify-center bg-[#2d7d4e] text-white rounded-full disabled:opacity-40 shrink-0 transition-all active:scale-90"
           >
             <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>send</span>
           </button>
@@ -788,7 +788,7 @@ export default function MessagesPage() {
               setPendingImages([])
               handleSendNewMessage()
             }}
-              className="w-full py-3.5 bg-[#95490d] text-white rounded-full text-sm font-medium active:scale-95 transition-all">
+              className="w-full py-3.5 bg-[#2d7d4e] text-white rounded-full text-sm font-medium active:scale-95 transition-all">
               发送 {pendingImages.length} 张图片
             </button>
           </div>
