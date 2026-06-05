@@ -605,34 +605,59 @@ export default function MessagesPage() {
             const total = countAll(post.replies);
 
             return (
-              <div key={post.id} className={`bg-white/80 backdrop-blur-xl rounded-lg shadow-sm overflow-hidden ${isNew ? "animate-arc-in" : ""}`}>
+              <div key={post.id} className="card overflow-hidden">
                 {/* 帖子本身 */}
-                <div onClick={() => handleCardClick(post.id)} className="p-4 cursor-pointer active:scale-[0.98] transition-transform" style={{ borderLeft: `4px solid ${post.color || "#356668"}` }}>
+                <div className="p-4" style={{ borderLeft: `4px solid ${post.color || "#356668"}` }}>
                   <div className="flex items-center gap-3 mb-2">
                     <div onClick={(e) => { e.stopPropagation(); handleAvatarClick(post.userId); }} className="cursor-pointer shrink-0">
                       <Avatar name={post.userId || "User"} size="w-10 h-10" />
                     </div>
-                    <div className="flex-1 min-w-0" onClick={(e) => { e.stopPropagation(); handleAvatarClick(post.userId); }}>
-                      <div className="flex justify-between items-baseline cursor-pointer">
-                        <h4 className="font-label-md text-label-md font-bold truncate hover:text-primary transition-colors">{usr?.name || "用户"}</h4>
-                        <span className="font-label-sm text-label-sm text-on-surface-variant/60 shrink-0 ml-2">{post.time}</span>
+                    <div className="flex-1 min-w-0">
+                      <div onClick={(e) => { e.stopPropagation(); handleAvatarClick(post.userId); }} className="flex justify-between items-baseline cursor-pointer">
+                        <h4 className="font-semibold text-sm text-on-surface truncate hover:text-primary transition-colors">{usr?.name || "用户"}</h4>
+                        <span className="text-xs text-on-surface-variant/60 shrink-0 ml-2">{post.time}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] text-on-surface-variant/50">{total} 条回复</span>
-                        {post.distance !== null && (
-                          <span className="text-[10px] text-primary/60">{formatDistance(post.distance)}</span>
+                        <span className="text-xs text-on-surface-variant/50">{total} 条回复</span>
+                        {post.distance !== null && post.latitude && post.longitude && (
+                          <button onClick={(e) => { e.stopPropagation(); setViewLocation({ lat: post.latitude, lng: post.longitude }); setLocInputLat(post.latitude.toFixed(6)); setLocInputLng(post.longitude.toFixed(6)) }}
+                            className="text-xs text-primary/60 hover:text-primary active:scale-95 transition-all">
+                            {formatDistance(post.distance)} 📍
+                          </button>
                         )}
                       </div>
                     </div>
                   </div>
-                  {/* 消息内容 — 支持图片渲染 */}
-                  {post.message?.startsWith('![](') ? (
-                    <img src={post.message.match(/!\[.*?\]\((.*?)\)/)?.[1]} alt=""
-                      className="w-full max-h-64 object-cover rounded-xl mt-1"
-                      onError={(e) => { e.target.style.display = 'none' }} />
-                  ) : (
-                    <p className="font-body-md text-body-md">{post.message}</p>
-                  )}
+                  {/* 消息内容 — 点击直接回复 */}
+                  <div onClick={() => handleReply(post.id, null)} className="cursor-pointer active:scale-[0.98] transition-transform">
+                    {post.message?.startsWith('![](') ? (
+                      <img src={post.message.match(/!\[.*?\]\((.*?)\)/)?.[1]} alt=""
+                        className="w-full max-h-64 object-cover rounded-xl mt-1"
+                        onError={(e) => { e.target.style.display = 'none' }} />
+                    ) : (
+                      <p className="text-sm text-on-surface leading-relaxed">{post.message}</p>
+                    )}
+                  </div>
+                  {/* 回复/展开按钮 */}
+                  <div className="flex items-center gap-3 mt-2 pt-2 border-t border-[#f0edea]">
+                    <button onClick={() => handleReply(post.id, null)}
+                      className="flex items-center gap-1 text-xs text-primary/60 hover:text-primary active:scale-95 transition-all px-3 py-1.5 -ml-1">
+                      <span className="material-symbols-outlined text-[16px]">chat_bubble_outline</span>
+                      回复
+                    </button>
+                    {total > 0 && (
+                      <button onClick={() => setExpandedId(expandedId === post.id ? null : post.id)}
+                        className={`flex items-center gap-1 text-xs text-on-surface-variant/50 hover:text-on-surface-variant active:scale-95 transition-all px-3 py-1.5 ${expandedId === post.id ? 'text-primary' : ''}`}>
+                        <span className="material-symbols-outlined text-[16px]">{expandedId === post.id ? 'expand_less' : 'expand_more'}</span>
+                        {expandedId === post.id ? '收起回复' : `查看 ${total} 条回复`}
+                      </button>
+                    )}
+                    <div className="flex-1" />
+                    <button onClick={() => handleReply(post.id, null)}
+                      className="flex items-center gap-1 text-xs text-on-surface-variant/30 hover:text-primary/60 px-2 py-1.5">
+                      <span className="material-symbols-outlined text-[14px]">reply</span>
+                    </button>
+                  </div>
                 </div>
 
                 {isExpanded && (
