@@ -86,6 +86,7 @@ export default function MessagesPage() {
 
   const [refreshing, setRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
+  const [composeOpen, setComposeOpen] = useState(false);
   const [showEmoji, setShowEmoji] = useState(false);
   const [pendingImages, setPendingImages] = useState([]);
   const scrollRef = useRef(null);
@@ -706,62 +707,63 @@ export default function MessagesPage() {
         <div className="h-28" />
       </div>
 
-      {/* 底部统一输入框 */}
-      <div className="fixed left-0 right-0 z-[60] bg-white border-t border-surface-variant/20 px-4 py-3 shadow-[0_-2px_8px_rgba(0,0,0,0.06)]"
-        style={{ bottom: keyboardHeight > 50 ? keyboardHeight : '80px' }}>
-        <div className="flex items-center gap-2">
-          {/* 回复上下文提示 */}
-          {replyingTo && (
-            <div className="flex items-center gap-1 shrink-0 max-w-[120px]">
-              <span className="text-[10px] text-on-surface-variant/60 bg-surface-container-low px-2 py-1 rounded-full truncate">
-                回复 @{replyingTo.userName}
-              </span>
-              <button onClick={cancelReply} className="text-on-surface-variant/40 hover:text-on-surface-variant">
-                <span className="material-symbols-outlined text-[14px]">close</span>
-              </button>
-            </div>
-          )}
-          <button onClick={() => setShowEmoji(!showEmoji)} className="text-on-surface-variant/60 hover:text-on-surface-variant shrink-0 w-8 h-8 flex items-center justify-center">
-            <span className="text-lg">😊</span>
-          </button>
-          <input
-            ref={newMessageInputRef}
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder={replyingTo ? `回复 @${replyingTo.userName}...` : "输入新消息..."}
-            autoComplete="off"
-            className="flex-1 bg-surface-container-low rounded-full px-4 py-2.5 text-sm outline-none border-none"
-            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleSendNewMessage(); } }}
-            onFocus={handleNewMessageFocus}
-          />
-          <button
-            ref={newMessageBtnRef}
-            onClick={handleSendNewMessage}
-            disabled={!newMessage.trim() || sendingNewMessage}
-            className="w-9 h-9 flex items-center justify-center bg-[#2d7d4e] text-white rounded-full disabled:opacity-40 shrink-0 transition-all active:scale-90"
-          >
-            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>send</span>
-          </button>
-        </div>
-        {/* 表情包选择器 */}
-        {showEmoji && (
-          <div className="pt-2 pb-1 border-t border-surface-variant/20 mt-2">
-            <div className="flex gap-1 mb-1 overflow-x-auto">
-              {['😊','❤️','😎','🐱','🍕','⚽'].map((cat, ci) => (
-                <button key={ci} className="text-lg px-2 py-0.5 rounded-lg bg-surface-container-low/50 shrink-0">{cat}</button>
-              ))}
-            </div>
-            <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto">
-              {emojiList.flat().map((emoji) => (
-                <button key={emoji} onClick={() => insertEmoji(emoji)} className="text-xl hover:bg-surface-container-low rounded-lg px-1.5 py-1 active:scale-110 transition-transform">
-                  {emoji}
+      {/* 展开的输入面板 */}
+      {composeOpen && (
+        <div className="fixed inset-0 z-[80] flex flex-col justify-end" onClick={() => setComposeOpen(false)}>
+          <div className="bg-white rounded-t-2xl shadow-xl pb-8" onClick={e => e.stopPropagation()}
+            style={{ paddingBottom: keyboardHeight > 50 ? keyboardHeight : 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}>
+            <div className="w-10 h-1 bg-surface-variant rounded-full mx-auto mb-4 mt-2" />
+            <div className="px-4">
+              {/* 回复上下文 */}
+              {replyingTo && (
+                <div className="flex items-center gap-1 mb-2">
+                  <span className="text-[10px] text-on-surface-variant/60 bg-surface-container-low px-2 py-1 rounded-full truncate">
+                    回复 @{replyingTo.userName}
+                  </span>
+                  <button onClick={cancelReply} className="text-on-surface-variant/40 hover:text-on-surface-variant">
+                    <span className="material-symbols-outlined text-[14px]">close</span>
+                  </button>
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <button onClick={() => setShowEmoji(!showEmoji)} className="text-on-surface-variant/60 hover:text-on-surface-variant shrink-0 w-8 h-8 flex items-center justify-center">
+                  <span className="text-lg">😊</span>
                 </button>
-              ))}
+                <button onClick={() => {
+                  const input = document.createElement('input')
+                  input.type = 'file'; input.accept = 'image/*'; input.multiple = true
+                  input.onchange = (e) => {
+                    const files = Array.from(e.target.files || [])
+                    if (files.length) setPendingImages(files.map(f => ({ file: f, preview: URL.createObjectURL(f) })))
+                  }
+                  input.click()
+                }} className="text-on-surface-variant/60 hover:text-on-surface-variant shrink-0 w-8 h-8 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-[20px]">add_photo_alternate</span>
+                </button>
+                <input ref={newMessageInputRef} type="text" value={newMessage} onChange={e => setNewMessage(e.target.value)}
+                  placeholder={replyingTo ? `回复 @${replyingTo.userName}...` : "写点什么..."}
+                  className="flex-1 bg-surface-container-low rounded-full px-4 py-3 text-sm outline-none border-none"
+                  onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); handleSendNewMessage() } }}
+                  autoFocus />
+                <button onClick={handleSendNewMessage} disabled={!newMessage.trim() || sendingNewMessage}
+                  className="w-10 h-10 flex items-center justify-center bg-[#2d7d4e] text-white rounded-full disabled:opacity-40 shrink-0 transition-all active:scale-90">
+                  <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>send</span>
+                </button>
+              </div>
+              {/* 表情包 */}
+              {showEmoji && (
+                <div className="pt-3 pb-1 border-t border-surface-variant/20 mt-3">
+                  <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
+                    {emojiList.flat().map((emoji) => (
+                      <button key={emoji} onClick={() => insertEmoji(emoji)} className="text-xl hover:bg-surface-container-low rounded-lg px-1.5 py-1 active:scale-110 transition-transform">{emoji}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="shrink-0 h-20" />
 
@@ -801,22 +803,11 @@ export default function MessagesPage() {
         </div>
       )}
 
-      {/* FAB — 发图片 */}
-      <button onClick={() => {
-        const input = document.createElement('input')
-        input.type = 'file'
-        input.accept = 'image/*'
-        input.multiple = true
-        input.onchange = (e) => {
-          const files = Array.from(e.target.files || [])
-          if (!files.length) return
-          setPendingImages(files.map(f => ({ file: f, preview: URL.createObjectURL(f) })))
-        }
-        input.click()
-      }}
+      {/* FAB — 展开输入面板 */}
+      <button onClick={() => { setComposeOpen(true); setTimeout(() => newMessageInputRef.current?.focus(), 200) }}
         className="fixed right-4 z-[70] w-14 h-14 bg-primary text-white rounded-full shadow-[0_8px_24px_rgba(149,73,13,0.3)] flex items-center justify-center hover:scale-105 active:scale-95 transition-all"
-        style={{ bottom: 168 }}>
-        <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>add_a_photo</span>
+        style={{ bottom: 100 }}>
+        <span className="material-symbols-outlined text-[28px]" style={{ fontVariationSettings: "'FILL' 1" }}>edit_note</span>
       </button>
 
       {filterOpen && (
