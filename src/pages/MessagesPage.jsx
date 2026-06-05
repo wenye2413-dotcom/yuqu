@@ -495,38 +495,28 @@ export default function MessagesPage() {
             <span className="text-xs text-primary ml-2">刷新中...</span>
           </div>
         )}
-        {/* 顶部：经纬度 + 半径 + 刷新/时间 */}
+        {/* 顶部：经纬度（左）+ 半径 + 刷新（右） */}
         <div className="flex items-center gap-2 pt-2 pb-2">
           <button onClick={() => setShowLocPicker(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/5 text-primary rounded-full text-[11px] font-medium border border-primary/10 max-w-[220px] overflow-hidden">
-            <span className="material-symbols-outlined text-[12px]">crosshair</span>
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/5 text-primary rounded-full text-[11px] font-medium border border-primary/10 flex-1 min-w-0 overflow-hidden">
+            <span className="material-symbols-outlined text-[12px] shrink-0">crosshair</span>
             <span className="truncate">{viewLocation ? `${viewLocation.lat.toFixed(6)}, ${viewLocation.lng.toFixed(6)}` : '定位中...'}</span>
           </button>
           {viewLocation && location && (
             <span className="text-[10px] text-on-surface-variant/40 shrink-0">
-              距你{formatDistance(calcDistance(viewLocation.lat, viewLocation.lng, location.lat, location.lng))}
+              {formatDistance(calcDistance(viewLocation.lat, viewLocation.lng, location.lat, location.lng))}
             </span>
           )}
           {accuracy && accuracy > 500 && (
             <span className="text-[10px] text-amber-500/70 shrink-0">±{Math.round(accuracy)}m</span>
           )}
-          <div className="flex-1" />
-          <div className="flex items-center gap-2">
-            <button onClick={handleRefresh} disabled={refreshing} className="text-on-surface-variant/60 hover:text-primary transition-colors p-1">
-              <span className={`material-symbols-outlined text-[18px] ${refreshing ? 'animate-spin' : ''}`}>refresh</span>
-            </button>
-            <button onClick={() => setFilterOpen(true)} className="text-on-surface-variant/60 hover:text-primary transition-colors p-1">
-              <span className="material-symbols-outlined text-[18px]">tune</span>
-            </button>
-          </div>
-        </div>
-
-        {/* 半径 */}
-        <div className="flex items-center gap-2 pb-2">
           <button onClick={() => setShowRadiusPicker(!showRadiusPicker)}
-            className="flex items-center gap-1 px-2.5 py-1 bg-primary/10 text-primary rounded-full text-[11px] font-medium">
+            className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 bg-primary/10 text-primary rounded-full text-[11px] font-medium">
             <span className="material-symbols-outlined text-[12px]">radio_button_checked</span>
             {radius >= 1000 ? `${radius / 1000}km` : `${radius}m`}
+          </button>
+          <button onClick={handleRefresh} disabled={refreshing} className="shrink-0 text-on-surface-variant/60 hover:text-primary transition-colors p-1">
+            <span className={`material-symbols-outlined text-[18px] ${refreshing ? 'animate-spin' : ''}`}>refresh</span>
           </button>
         </div>
 
