@@ -126,5 +126,21 @@ export default defineConfig(({ mode }) => {
         },
       },
     ],
+    server: {
+      proxy: {
+        '/auth/': {
+          target: 'https://rczqlxxveukukuuwluzg.supabase.co',
+          changeOrigin: true,
+        },
+        '/rest/': {
+          target: 'https://rczqlxxveukukuuwluzg.supabase.co',
+          changeOrigin: true,
+        },
+        '/storage/': {
+          target: 'https://rczqlxxveukukuuwluzg.supabase.co',
+          changeOrigin: true,
+        },
+      },
+    },
   };
 });

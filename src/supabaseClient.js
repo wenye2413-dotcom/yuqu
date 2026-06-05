@@ -1,11 +1,18 @@
 // src/supabaseClient.js
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = 'https://yuqu.pages.dev'
+// 开发模式直连 Supabase，生产模式走 Pages 代理
+const SUPABASE_HOST = 'rczqlxxveukukuuwluzg.supabase.co'
 const supabaseAnonKey = 'sb_publishable_6zAx4O5bTDOOSe7Pv3uUpw_2sECW0xR'
 
-// Realtime WebSocket 直连 Supabase（不走代理，WebSocket 必须直连）
-const REAL_TIME_URL = 'wss://rczqlxxveukukuuwluzg.supabase.co/realtime/v1'
+const isDev = import.meta.env.DEV
+// 开发模式走 Vite proxy（localhost:5173/auth → Supabase）
+const supabaseUrl = isDev
+  ? 'http://localhost:5173'
+  : 'https://yuqu.pages.dev'
+
+// Realtime WebSocket — 始终直连 Supabase
+const REAL_TIME_URL = `wss://${SUPABASE_HOST}/realtime/v1`
 
 // 强制清理所有 Supabase 本地缓存，防止旧的 .co 域名干扰
 try {
