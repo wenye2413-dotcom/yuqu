@@ -92,7 +92,14 @@ export default function MessagesPage() {
   const pullStartY = useRef(0);
   const isPulling = useRef(false);
 
-  const emojis = ['😀','😊','😂','🤣','❤️','🔥','👍','😍','🥰','😎','🙏','💪','😅','🤔','😭','😘','🥺','😤','🤩','✨','🎉','💯','😈','👏','😏','🙄','😴','🤗','😱','🤯']
+  const emojiList = [
+    ['😀','😊','😂','🤣','😅','😭','😍','🥰','😘','😙'],
+    ['❤️','🔥','💯','✨','🎉','💪','🙏','👍','👏','🤝'],
+    ['😎','🤩','😈','🤗','😏','🙄','😴','🤔','🥺','😤'],
+    ['🐶','🐱','🐼','🐨','🦊','🐰','🦄','🐸','🐲','🌟'],
+    ['🍕','🍔','🌮','🍣','🍜','🍰','☕','🍺','🎂','🍩'],
+    ['⚽','🏀','🎮','🎵','🎸','🎤','🏆','📸','🎨','🚀'],
+  ]
 
   const handleRefresh = async () => {
     setRefreshing(true)
@@ -700,8 +707,8 @@ export default function MessagesPage() {
       </div>
 
       {/* 底部统一输入框 */}
-      <div className="fixed bottom-[80px] left-0 right-0 z-[60] bg-white border-t border-surface-variant/20 px-4 py-3 shadow-[0_-2px_8px_rgba(0,0,0,0.06)]"
-        style={{ paddingBottom: keyboardHeight > 20 ? `calc(0.75rem + ${keyboardHeight}px)` : "0.75rem" }}>
+      <div className="fixed left-0 right-0 z-[60] bg-white border-t border-surface-variant/20 px-4 py-3 shadow-[0_-2px_8px_rgba(0,0,0,0.06)]"
+        style={{ bottom: keyboardHeight > 20 ? keyboardHeight : '80px', paddingBottom: '0.75rem' }}>
         <div className="flex items-center gap-2">
           {/* 回复上下文提示 */}
           {replyingTo && (
@@ -737,14 +744,21 @@ export default function MessagesPage() {
             <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>send</span>
           </button>
         </div>
-        {/* 表情选择器 */}
+        {/* 表情包选择器 */}
         {showEmoji && (
-          <div className="flex flex-wrap gap-1.5 pt-2 pb-1 border-t border-surface-variant/20 mt-2 max-h-28 overflow-y-auto">
-            {emojis.map((emoji) => (
-              <button key={emoji} onClick={() => insertEmoji(emoji)} className="text-xl hover:bg-surface-container-low rounded-lg px-1 py-0.5 active:scale-110 transition-transform">
-                {emoji}
-              </button>
-            ))}
+          <div className="pt-2 pb-1 border-t border-surface-variant/20 mt-2">
+            <div className="flex gap-1 mb-1 overflow-x-auto">
+              {['😊','❤️','😎','🐱','🍕','⚽'].map((cat, ci) => (
+                <button key={ci} className="text-lg px-2 py-0.5 rounded-lg bg-surface-container-low/50 shrink-0">{cat}</button>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto">
+              {emojiList.flat().map((emoji) => (
+                <button key={emoji} onClick={() => insertEmoji(emoji)} className="text-xl hover:bg-surface-container-low rounded-lg px-1.5 py-1 active:scale-110 transition-transform">
+                  {emoji}
+                </button>
+              ))}
+            </div>
           </div>
         )}
       </div>
