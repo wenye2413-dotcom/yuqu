@@ -294,27 +294,6 @@ export default function GroupsPage() {
           )
         })()}
       </div>
-                  const s = translateJoinStatus(joinStates[g.id], g.isPublic);
-                  return (
-                    <button
-                      onClick={(e) => handleJoin(e, g)}
-                      className={`px-3 py-1 ${s.style} text-label-sm rounded-full active:scale-95 transition-transform`}
-                    >
-                      {s.label}
-                    </button>
-                  );
-                })()}
-                <button
-                  onClick={(e) => { e.stopPropagation(); share(`加入「${g.name}」`, `${g.desc || ""}`, `/group-chat/${g.id}`); }}
-                  className="w-7 h-7 flex items-center justify-center text-on-surface-variant/40 hover:text-primary transition-colors"
-                >
-                  <span className="material-symbols-outlined text-[18px]">share</span>
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
 
       {/* 筛选面板 */}
       {filterOpen && (
