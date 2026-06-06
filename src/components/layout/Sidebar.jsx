@@ -101,7 +101,7 @@ export default function Sidebar({ open, onClose }) {
                 <div className="flex flex-wrap gap-1.5 px-1">
                   {timeRanges.map((t) => (
                     <button key={t} onClick={() => applyTimeFilter(t)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${timeFilter === t ? 'bg-primary text-white shadow-sm' : 'bg-surface-container-low text-on-surface-variant'}`}>
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${(timeFilter || '不限') === t ? 'bg-primary text-white shadow-sm' : 'bg-surface-container-low text-on-surface-variant'}`}>
                       {t}
                     </button>
                   ))}
