@@ -93,14 +93,10 @@ export default function MessagesPage() {
   const newMessageBtnRef = useRef(null);
 
   const [refreshing, setRefreshing] = useState(false);
-  const [pullDistance, setPullDistance] = useState(0);
   const [composeOpen, setComposeOpen] = useState(false);
   const [showEmoji, setShowEmoji] = useState(false);
   const [pendingImages, setPendingImages] = useState([]);
   const scrollRef = useRef(null);
-  const pullStartY = useRef(0);
-  const isPulling = useRef(false);
-
   const emojiList = [
     ['😀','😊','😂','🤣','😅','😭','😍','🥰','😘','😙'],
     ['❤️','🔥','💯','✨','🎉','💪','🙏','👍','👏','🤝'],
@@ -114,41 +110,7 @@ export default function MessagesPage() {
     setRefreshing(true)
     await Promise.all([fetchPosts(), fetchProfiles()])
     setRefreshing(false)
-    setPullDistance(0)
     toast("已刷新", "success")
-  }
-
-  // 下拉刷新
-  const handleTouchStart = (e) => {
-    if (scrollRef.current && scrollRef.current.scrollTop === 0) {
-      pullStartY.current = e.touches[0].clientY
-      isPulling.current = true
-    }
-  }
-
-  const handleTouchMove = (e) => {
-    if (!isPulling.current) return
-    const diff = e.touches[0].clientY - pullStartY.current
-    if (diff > 0) {
-      setPullDistance(Math.min(diff * 0.5, 80))
-      if (diff > 100) {
-        // 触及刷新阈值 — 立即触发
-        isPulling.current = false
-        setPullDistance(0)
-        handleRefresh()
-      }
-    }
-  }
-
-  const handleTouchEnd = () => {
-    if (isPulling.current) {
-      if (pullDistance > 50) {
-        handleRefresh()
-      } else {
-        setPullDistance(0)
-      }
-      isPulling.current = false
-    }
   }
 
   const insertEmoji = (emoji) => {
@@ -500,21 +462,38 @@ export default function MessagesPage() {
 
   return (
     <div className="flex flex-col" style={{ height: '100dvh' }}>
-      {/* 消息流 */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-margin-mobile pb-2 overscroll-none"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
-        {/* 下拉刷新指示器 */}
-        {pullDistance > 0 && (
-          <div className="flex items-center justify-center py-2 transition-all" style={{ height: pullDistance, opacity: Math.min(pullDistance / 50, 1) }}>
-            <span className={`material-symbols-outlined text-primary ${pullDistance > 50 ? '' : 'animate-spin'}`} style={{ fontVariationSettings: "'FILL' 1" }}>
-              {pullDistance > 50 ? 'arrow_downward' : 'refresh'}
-            </span>
-            <span className="text-xs text-primary ml-2">{pullDistance > 50 ? '释放刷新' : '下拉刷新'}</span>
+      {/* 固定顶部：经纬度 + 半径 + 时间 + 刷新 */}
+      <div className="shrink-0 px-margin-mobile pt-2 pb-1 bg-background border-b border-[#f0edea]/50">
+        <div className="flex items-center gap-2 mb-1">
+          <div className="flex-1 min-w-0">
+            <button onClick={() => setShowLocPicker(true)}
+              className="w-full text-left flex items-center gap-1.5 px-3 py-2 bg-primary/5 text-primary rounded-full text-[12px] font-medium border border-primary/10">
+              <span className="material-symbols-outlined text-[14px] shrink-0">📍</span>
+              <span className="font-mono">{viewLocation ? `${viewLocation.lat.toFixed(6)}, ${viewLocation.lng.toFixed(6)}` : '定位中...'}</span>
+            </button>
           </div>
+          <button onClick={() => setShowRadiusPicker(!showRadiusPicker)}
+            className="shrink-0 flex items-center gap-1 px-3 py-2 bg-primary/10 text-primary rounded-full text-[12px] font-medium">
+            <span className="material-symbols-outlined text-[12px]">radio_button_checked</span>
+            {radius >= MAX_RADIUS ? '不限' : radius >= 1000 ? `${radius / 1000}km` : `${radius}m`}
+          </button>
+          <button onClick={() => setFilterOpen(true)} className="shrink-0 text-[10px] text-on-surface-variant/50 hover:text-primary px-1.5 py-1 rounded">
+            {activeTime || '不限'}
+          </button>
+          <button onClick={handleRefresh} disabled={refreshing} className="shrink-0 text-on-surface-variant/60 hover:text-primary transition-colors p-1">
+            <span className={`material-symbols-outlined text-[18px] ${refreshing ? 'animate-spin' : ''}`}>refresh</span>
+          </button>
+        </div>
+        {viewLocation && location && (
+          <p className="text-[10px] text-on-surface-variant/40 px-1">
+            距你 {formatDistance(calcDistance(viewLocation.lat, viewLocation.lng, location.lat, location.lng))}
+            {accuracy && accuracy > 500 && ` · 精度±${Math.round(accuracy)}m`}
+          </p>
         )}
+      </div>
+
+      {/* 消息流 */}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-margin-mobile pb-2 overscroll-none">
         {/* 加载中指示器 */}
         {refreshing && (
           <div className="flex items-center justify-center py-3">
@@ -522,35 +501,6 @@ export default function MessagesPage() {
             <span className="text-xs text-primary ml-2">刷新中...</span>
           </div>
         )}
-        {/* 顶部：经纬度（独占一行）+ 半径 + 刷新 */}
-        <div className="pt-2 pb-1">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="flex-1 min-w-0">
-              <button onClick={() => setShowLocPicker(true)}
-                className="w-full text-left flex items-center gap-1.5 px-3 py-2 bg-primary/5 text-primary rounded-full text-[12px] font-medium border border-primary/10">
-                <span className="material-symbols-outlined text-[14px] shrink-0">📍</span>
-                <span className="font-mono">{viewLocation ? `${viewLocation.lat.toFixed(6)}, ${viewLocation.lng.toFixed(6)}` : '定位中...'}</span>
-              </button>
-            </div>
-            <button onClick={() => setShowRadiusPicker(!showRadiusPicker)}
-              className="shrink-0 flex items-center gap-1 px-3 py-2 bg-primary/10 text-primary rounded-full text-[12px] font-medium">
-              <span className="material-symbols-outlined text-[12px]">radio_button_checked</span>
-              {radius >= MAX_RADIUS ? '不限' : radius >= 1000 ? `${radius / 1000}km` : `${radius}m`}
-            </button>
-            <button onClick={() => setFilterOpen(true)} className="shrink-0 text-[10px] text-on-surface-variant/50 hover:text-primary px-1.5 py-1 rounded">
-              {activeTime || '不限'}
-            </button>
-            <button onClick={handleRefresh} disabled={refreshing} className="shrink-0 text-on-surface-variant/60 hover:text-primary transition-colors p-1">
-              <span className={`material-symbols-outlined text-[18px] ${refreshing ? 'animate-spin' : ''}`}>refresh</span>
-            </button>
-          </div>
-          {viewLocation && location && (
-            <p className="text-[10px] text-on-surface-variant/40 px-1">
-              距你 {formatDistance(calcDistance(viewLocation.lat, viewLocation.lng, location.lat, location.lng))}
-              {accuracy && accuracy > 500 && ` · 精度±${Math.round(accuracy)}m`}
-            </p>
-          )}
-        </div>
 
         {/* 地点搜索框 */}
         {showLocPicker && (

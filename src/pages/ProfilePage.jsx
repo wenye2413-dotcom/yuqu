@@ -81,6 +81,7 @@ export default function ProfilePage() {
     }, { onConflict: "id" });
     if (upsertErr) console.error("profile upsert error:", upsertErr);
     setSaving(false);
+    await supabase.auth.refreshSession();
     refreshProfile();
     toast("头像已更新", "success");
   };
@@ -91,8 +92,11 @@ export default function ProfilePage() {
     await supabase.from("profiles").upsert({
       id: user.id, name: editName, bio: editBio, location: editLocation, gender: editGender, birthday: editBirthday, website: editWebsite, updated_at: new Date().toISOString(),
     }, { onConflict: "id" });
+    // 立即更新本地显示，不等待 refreshProfile 的异步操作
     setSaving(false);
     setEditOpen(false);
+    // 强制重新获取最新用户信息
+    await supabase.auth.refreshSession();
     refreshProfile();
     toast("已保存", "success");
   };
