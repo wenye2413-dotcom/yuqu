@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useState, useEffect } from "react"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import { useAuth } from "../../context/AuthContext"
 import { AnimatePresence, motion } from "framer-motion"
 import Avatar from "../common/Avatar"
@@ -12,22 +12,26 @@ const menuItems = [
   { icon: 'settings', label: '设置', key: 'settings' },
 ]
 
-const timeRanges = ["今天", "昨天", "本周", "本月", "自定义"]
+const timeRanges = ["不限", "今天", "昨天", "本周", "本月", "自定义"]
 
 export default function Sidebar({ open, onClose }) {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { user, profile, logout } = useAuth()
-  // 从 URL 参数读取当前时间筛选（或使用默认值）
-  const [timeFilter, setTimeFilter] = useState("今天")
+  const [timeFilter, setTimeFilter] = useState(searchParams.get('time') || "")
   const [dateValue, setDateValue] = useState("")
 
   const applyTimeFilter = (range) => {
     setTimeFilter(range)
-    if (range !== "自定义") setDateValue("")
-    // 通过 URL 参数通知消息页
+    setDateValue("")
     const params = new URLSearchParams(window.location.search)
-    params.set('time', range)
-    if (range === '自定义') params.set('date', dateValue)
+    if (range === '不限') {
+      params.delete('time')
+      params.delete('date')
+    } else {
+      params.set('time', range)
+      if (range === '自定义') params.set('date', dateValue)
+    }
     navigate(`${window.location.pathname}?${params.toString()}`, { replace: true })
     onClose()
   }

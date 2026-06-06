@@ -167,10 +167,10 @@ export default function MessagesPage() {
   }
 
   const [filterDist, setFilterDist] = useState(5000);
-  const [filterTime, setFilterTime] = useState("今天");
+  const [filterTime, setFilterTime] = useState("");
   const [filterDateValue, setFilterDateValue] = useState("");
   const [activeDist, setActiveDist] = useState(5000);
-  const [activeTime, setActiveTime] = useState("今天");
+  const [activeTime, setActiveTime] = useState("");
   const [activeDateLabel, setActiveDateLabel] = useState("");
 
   // 位置相关 — GPS定位 + 查看位置
@@ -498,7 +498,7 @@ export default function MessagesPage() {
   const safeBottom = keyboardHeight > 20 ? keyboardHeight : 0;
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex flex-col" style={{ height: '100dvh' }}>
       {/* 消息流 */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-margin-mobile pb-2 overscroll-none"
         onTouchStart={handleTouchStart}

@@ -249,7 +249,7 @@ export default function ProfilePage() {
       </div>
 
       <Modal open={editOpen} onClose={() => setEditOpen(false)} title="编辑资料">
-        <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+        <div className="space-y-3 overflow-y-auto" style={{ maxHeight: '55vh' }}>
           <input type="text" value={editName} onChange={e => setEditName(e.target.value)} placeholder="昵称"
             className="w-full bg-surface-container-low rounded-xl px-4 py-3 text-sm outline-none border border-outline-variant/30" />
           <textarea value={editBio} onChange={e => setEditBio(e.target.value)} placeholder="简介" rows={3}
