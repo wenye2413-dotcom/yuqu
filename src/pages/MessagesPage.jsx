@@ -74,11 +74,9 @@ export default function MessagesPage() {
   // 从 URL 参数读取时间筛选（来自侧边栏）
   useEffect(() => {
     const timeParam = searchParams.get('time')
-    if (timeParam) {
-      setActiveTime(timeParam === '不限' ? '' : timeParam)
-      setFilterDateValue('')
-      setActiveDateLabel('')
-    }
+    setActiveTime(timeParam || '')
+    setFilterDateValue('')
+    setActiveDateLabel('')
   }, [searchParams])
   const [showLocPicker, setShowLocPicker] = useState(false);
   const [locSearch, setLocSearch] = useState("");
@@ -642,7 +640,7 @@ export default function MessagesPage() {
                 <div className="p-4" style={{ borderLeft: `4px solid ${post.color || "#356668"}` }}>
                   <div className="flex items-center gap-3 mb-2">
                     <div onClick={(e) => { e.stopPropagation(); handleAvatarClick(post.userId); }} className="cursor-pointer shrink-0">
-                      <Avatar name={post.userId || "User"} src={profiles[post.userId]?.avatar_url} size="w-10 h-10" />
+                      <Avatar name={post.userId || "User"} src={post.userId === user?.id ? authProfile?.avatar_url : profiles[post.userId]?.avatar_url} size="w-10 h-10" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div onClick={(e) => { e.stopPropagation(); handleAvatarClick(post.userId); }} className="flex justify-between items-baseline cursor-pointer">

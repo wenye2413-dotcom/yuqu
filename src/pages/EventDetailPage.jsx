@@ -154,6 +154,14 @@ export default function EventDetailPage() {
             <p className="text-sm font-semibold text-on-surface">
               {myReg.status === 'approved' ? '报名已通过' : myReg.status === 'rejected' ? '报名未通过' : '等待主办方确认'}
             </p>
+            <button onClick={async () => {
+              await supabase.from("event_registrations").delete().eq("id", myReg.id)
+              setMyReg(null)
+              toast("已取消报名", "info")
+            }}
+              className="mt-3 text-xs text-red-400 hover:text-red-600 transition-colors px-4 py-1.5 rounded-full border border-red-200 active:scale-95">
+              取消报名
+            </button>
           </div>
         ) : (
           <button onClick={handleJoin}
