@@ -7,8 +7,8 @@ import { useLocation, calcDistance, formatDistance } from "../hooks/useLocation"
 import Avatar from "../components/common/Avatar";
 
 const timeRanges = ["今天", "昨天", "本周", "本月"];
-const MIN_RADIUS = 0    // 最小 0 米
-const MAX_RADIUS = 10000 // 最大 10 公里
+const MIN_RADIUS = 0      // 最小 0 米
+const MAX_RADIUS = 40000   // 最大 40 公里（覆盖不限距离场景）
 
 /**
  * 递归评论组件（纯展示，回复走底部统一输入框）
@@ -21,7 +21,7 @@ function CommentThread({ reply, postId, profiles, currentUserId, onAvatarClick, 
     <div className="ml-1">
       <div className="flex items-start gap-2 py-1.5">
         <div onClick={() => onAvatarClick(reply.userId)} className="cursor-pointer shrink-0 mt-0.5">
-          <Avatar name={reply.userId || "User"} size="w-6 h-6" />
+          <Avatar name={reply.userId || "User"} src={profiles[reply.userId]?.avatar_url} size="w-6 h-6" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-2">
@@ -526,7 +526,7 @@ export default function MessagesPage() {
             <button onClick={() => setShowRadiusPicker(!showRadiusPicker)}
               className="shrink-0 flex items-center gap-1 px-3 py-2 bg-primary/10 text-primary rounded-full text-[12px] font-medium">
               <span className="material-symbols-outlined text-[12px]">radio_button_checked</span>
-              {radius >= 1000 ? `${radius / 1000}km` : `${radius}m`}
+              {radius >= MAX_RADIUS ? '不限' : radius >= 1000 ? `${radius / 1000}km` : `${radius}m`}
             </button>
             <button onClick={() => setFilterOpen(true)} className="shrink-0 text-[10px] text-on-surface-variant/50 hover:text-primary px-1.5 py-1 rounded">
               {activeTime || '不限'}
@@ -608,12 +608,12 @@ export default function MessagesPage() {
                 <span className="text-xs text-on-surface-variant">米</span>
                 <span className="text-xs text-on-surface-variant/50 mx-2">|</span>
                 <span className="text-xs font-semibold text-primary">
-                  {radius >= 1000 ? `${(radius / 1000).toFixed(2)}km` : `${radius}m`}
+                  {radius >= MAX_RADIUS ? '不限' : radius >= 1000 ? `${(radius / 1000).toFixed(2)}km` : `${radius}m`}
                 </span>
               </div>
             </div>
             <div className="flex justify-between text-[10px] text-on-surface-variant/50 px-1 mt-1">
-              <span>0m</span><span>100m</span><span>1km</span><span>5km</span><span>10km</span>
+              <span>0</span><span>100m</span><span>1km</span><span>5km</span><span>不限</span>
             </div>
           </div>
         )}
@@ -631,7 +631,7 @@ export default function MessagesPage() {
                 <div className="p-4" style={{ borderLeft: `4px solid ${post.color || "#356668"}` }}>
                   <div className="flex items-center gap-3 mb-2">
                     <div onClick={(e) => { e.stopPropagation(); handleAvatarClick(post.userId); }} className="cursor-pointer shrink-0">
-                      <Avatar name={post.userId || "User"} size="w-10 h-10" />
+                      <Avatar name={post.userId || "User"} src={profiles[post.userId]?.avatar_url} size="w-10 h-10" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div onClick={(e) => { e.stopPropagation(); handleAvatarClick(post.userId); }} className="flex justify-between items-baseline cursor-pointer">
