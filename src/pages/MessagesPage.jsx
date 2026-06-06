@@ -430,16 +430,24 @@ export default function MessagesPage() {
 
   const applyFilter = () => {
     setActiveDist(filterDist);
+    const timeVal = filterTime === "自定义" && filterDateValue ? filterDateValue : filterTime;
     if (filterTime === "自定义" && filterDateValue) {
       const d = new Date(filterDateValue + "T00:00:00");
-      const label = `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
-      setActiveTime(filterDateValue);
-      setActiveDateLabel(label);
+      setActiveDateLabel(`${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`);
     } else {
       setActiveTime(filterTime);
       setActiveDateLabel("");
     }
     setFilterOpen(false);
+    // 同步到 URL 参数，侧边栏读取
+    const params = new URLSearchParams(window.location.search)
+    if (filterTime) {
+      params.set('time', filterTime)
+      if (filterTime === '自定义' && filterDateValue) params.set('date', filterDateValue)
+    } else {
+      params.delete('time')
+    }
+    window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`)
   };
 
   const profileForPost = (p) => profiles[p.userId] || { name: "用户", avatar: p.userId };

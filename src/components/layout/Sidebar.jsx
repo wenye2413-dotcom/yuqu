@@ -18,8 +18,15 @@ export default function Sidebar({ open, onClose }) {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { user, profile, logout } = useAuth()
-  const [timeFilter, setTimeFilter] = useState(searchParams.get('time') || "")
+  const [timeFilter, setTimeFilter] = useState("")
   const [dateValue, setDateValue] = useState("")
+  // 打开侧边栏时从 URL 读取当前时间筛选
+  useEffect(() => {
+    if (open) {
+      setTimeFilter(searchParams.get('time') || "")
+      setDateValue(searchParams.get('date') || "")
+    }
+  }, [open])
 
   const applyTimeFilter = (range) => {
     setTimeFilter(range)
