@@ -432,24 +432,25 @@ export default function MessagesPage() {
 
   const applyFilter = () => {
     setActiveDist(filterDist);
-    const timeVal = filterTime === "自定义" && filterDateValue ? filterDateValue : filterTime;
     if (filterTime === "自定义" && filterDateValue) {
       const d = new Date(filterDateValue + "T00:00:00");
+      setActiveTime(filterDateValue);
       setActiveDateLabel(`${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`);
     } else {
       setActiveTime(filterTime);
       setActiveDateLabel("");
     }
     setFilterOpen(false);
-    // 同步到 URL 参数，侧边栏读取
+    // 同步到 URL 参数供侧边栏读取
     const params = new URLSearchParams(window.location.search)
     if (filterTime) {
       params.set('time', filterTime)
       if (filterTime === '自定义' && filterDateValue) params.set('date', filterDateValue)
     } else {
       params.delete('time')
+      params.delete('date')
     }
-    window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`)
+    navigate(`?${params.toString()}`, { replace: true })
   };
 
   const profileForPost = (p) => profiles[p.userId] || { name: "用户", avatar: p.userId };
@@ -734,7 +735,7 @@ export default function MessagesPage() {
       {composeOpen && (
         <div className="fixed inset-0 z-[80] flex flex-col justify-end" onClick={() => setComposeOpen(false)}>
           <div className="bg-white rounded-t-2xl shadow-xl" onClick={e => e.stopPropagation()}
-            style={{ paddingBottom: keyboardHeight > 20 ? keyboardHeight : 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}>
+            style={{ paddingBottom: keyboardHeight > 150 ? keyboardHeight : 'calc(1rem + env(safe-area-inset-bottom, 0px))' }}>
             <div className="w-10 h-1 bg-surface-variant rounded-full mx-auto mb-4 mt-2" />
             <div className="px-4">
               {/* 回复上下文 */}
