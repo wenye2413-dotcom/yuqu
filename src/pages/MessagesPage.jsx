@@ -735,7 +735,7 @@ export default function MessagesPage() {
       {composeOpen && (
         <div className="fixed inset-0 z-[80] flex flex-col justify-end" onClick={() => setComposeOpen(false)}>
           <div className="bg-white rounded-t-2xl shadow-xl" onClick={e => e.stopPropagation()}
-            style={{ paddingBottom: keyboardHeight > 150 ? keyboardHeight : 'calc(1rem + env(safe-area-inset-bottom, 0px))' }}>
+            style={{ paddingBottom: keyboardHeight > 250 ? keyboardHeight : '0.75rem' }}>
             <div className="w-10 h-1 bg-surface-variant rounded-full mx-auto mb-4 mt-2" />
             <div className="px-4">
               {/* 回复上下文 */}
