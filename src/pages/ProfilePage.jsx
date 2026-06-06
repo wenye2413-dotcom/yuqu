@@ -67,14 +67,19 @@ export default function ProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) { toast("请选择图片", "error"); return }
-    if (file.size > 2 * 1024 * 1024) { toast("图片不能超过2MB", "error"); return }
+    if (file.size > 5 * 1024 * 1024) { toast("图片不能超过5MB", "error"); return }
     setSaving(true);
     const ext = file.name.split(".").pop();
     const filePath = `${user.id}/avatar.${ext}`;
-    await supabase.storage.from("avatars").upload(filePath, file, { upsert: true });
-    const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(filePath);
-    await supabase.auth.updateUser({ data: { ...profile, avatar_url: publicUrl } });
-    await supabase.from("profiles").upsert({ id: user.id, avatar_url: publicUrl, updated_at: new Date().toISOString() }, { onConflict: "id" });
+    const { error: uploadErr } = await supabase.storage.from("avatars").upload(filePath, file, { upsert: true });
+    if (uploadErr) { toast("上传失败: " + uploadErr.message, "error"); setSaving(false); return }
+    // 使用直连 URL 而非代理 URL，确保图片可访问
+    const avatarUrl = `https://rczqlxxveukukuuwluzg.supabase.co/storage/v1/object/public/avatars/${filePath}`;
+    await supabase.auth.updateUser({ data: { ...profile, avatar_url: avatarUrl } });
+    const { error: upsertErr } = await supabase.from("profiles").upsert({
+      id: user.id, avatar_url: avatarUrl, updated_at: new Date().toISOString(),
+    }, { onConflict: "id" });
+    if (upsertErr) console.error("profile upsert error:", upsertErr);
     setSaving(false);
     refreshProfile();
     toast("头像已更新", "success");
@@ -249,27 +254,31 @@ export default function ProfilePage() {
       </div>
 
       <Modal open={editOpen} onClose={() => setEditOpen(false)} title="编辑资料">
-        <div className="space-y-3 overflow-y-auto" style={{ maxHeight: '55vh' }}>
-          <input type="text" value={editName} onChange={e => setEditName(e.target.value)} placeholder="昵称"
-            className="w-full bg-surface-container-low rounded-xl px-4 py-3 text-sm outline-none border border-outline-variant/30" />
-          <textarea value={editBio} onChange={e => setEditBio(e.target.value)} placeholder="简介" rows={3}
-            className="w-full bg-surface-container-low rounded-xl px-4 py-3 text-sm outline-none border border-outline-variant/30 resize-none" />
-          <input type="text" value={editLocation} onChange={e => setEditLocation(e.target.value)} placeholder="位置"
-            className="w-full bg-surface-container-low rounded-xl px-4 py-3 text-sm outline-none border border-outline-variant/30" />
-          <input type="text" value={editWebsite} onChange={e => setEditWebsite(e.target.value)} placeholder="个人网站/社交链接"
-            className="w-full bg-surface-container-low rounded-xl px-4 py-3 text-sm outline-none border border-outline-variant/30" />
-          <div className="flex gap-3">
-            <input type="date" value={editBirthday} onChange={e => setEditBirthday(e.target.value)}
-              className="flex-1 bg-surface-container-low rounded-xl px-4 py-3 text-sm outline-none border border-outline-variant/30" />
-            <select value={editGender} onChange={e => setEditGender(e.target.value)}
-              className="flex-1 bg-surface-container-low rounded-xl px-4 py-3 text-sm outline-none border border-outline-variant/30">
-              <option value="">性别</option><option value="男">男</option><option value="女">女</option>
-            </select>
+        <div className="space-y-3">
+          <div className="space-y-3 overflow-y-auto" style={{ maxHeight: '40vh' }}>
+            <input type="text" value={editName} onChange={e => setEditName(e.target.value)} placeholder="昵称"
+              className="w-full bg-surface-container-low rounded-xl px-4 py-3 text-sm outline-none border border-outline-variant/30" />
+            <textarea value={editBio} onChange={e => setEditBio(e.target.value)} placeholder="简介" rows={3}
+              className="w-full bg-surface-container-low rounded-xl px-4 py-3 text-sm outline-none border border-outline-variant/30 resize-none" />
+            <input type="text" value={editLocation} onChange={e => setEditLocation(e.target.value)} placeholder="位置"
+              className="w-full bg-surface-container-low rounded-xl px-4 py-3 text-sm outline-none border border-outline-variant/30" />
+            <input type="text" value={editWebsite} onChange={e => setEditWebsite(e.target.value)} placeholder="个人网站/社交链接"
+              className="w-full bg-surface-container-low rounded-xl px-4 py-3 text-sm outline-none border border-outline-variant/30" />
+            <div className="flex gap-3">
+              <input type="date" value={editBirthday} onChange={e => setEditBirthday(e.target.value)}
+                className="flex-1 bg-surface-container-low rounded-xl px-4 py-3 text-sm outline-none border border-outline-variant/30" />
+              <select value={editGender} onChange={e => setEditGender(e.target.value)}
+                className="flex-1 bg-surface-container-low rounded-xl px-4 py-3 text-sm outline-none border border-outline-variant/30">
+                <option value="">性别</option><option value="男">男</option><option value="女">女</option>
+              </select>
+            </div>
           </div>
-          <button onClick={handleSave} disabled={saving}
-            className="w-full py-3.5 bg-primary text-white font-label-md rounded-full shadow-lg shadow-primary/20 active:scale-95 transition-all disabled:opacity-50">
-            {saving ? "保存中..." : "保存"}
-          </button>
+          <div className="pt-2 border-t border-outline-variant/20">
+            <button onClick={handleSave} disabled={saving}
+              className="w-full py-3.5 bg-[#2d7d4e] text-white rounded-full text-sm font-medium active:scale-95 transition-all disabled:opacity-50 shadow-lg">
+              {saving ? "保存中..." : "保存"}
+            </button>
+          </div>
         </div>
       </Modal>
     </main>
