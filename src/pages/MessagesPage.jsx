@@ -74,18 +74,10 @@ export default function MessagesPage() {
   // 从 URL 参数读取时间筛选（来自侧边栏）
   useEffect(() => {
     const timeParam = searchParams.get('time')
-    if (timeParam && timeRanges.includes(timeParam)) {
-      setActiveTime(timeParam)
-      if (timeParam === '自定义') {
-        const dateParam = searchParams.get('date')
-        if (dateParam) {
-          setFilterDateValue(dateParam)
-          setActiveDateLabel(dateParam)
-        }
-      } else {
-        setFilterDateValue('')
-        setActiveDateLabel('')
-      }
+    if (timeParam) {
+      setActiveTime(timeParam === '不限' ? '' : timeParam)
+      setFilterDateValue('')
+      setActiveDateLabel('')
     }
   }, [searchParams])
   const [showLocPicker, setShowLocPicker] = useState(false);
@@ -535,6 +527,9 @@ export default function MessagesPage() {
               className="shrink-0 flex items-center gap-1 px-3 py-2 bg-primary/10 text-primary rounded-full text-[12px] font-medium">
               <span className="material-symbols-outlined text-[12px]">radio_button_checked</span>
               {radius >= 1000 ? `${radius / 1000}km` : `${radius}m`}
+            </button>
+            <button onClick={() => setFilterOpen(true)} className="shrink-0 text-[10px] text-on-surface-variant/50 hover:text-primary px-1.5 py-1 rounded">
+              {activeTime || '不限'}
             </button>
             <button onClick={handleRefresh} disabled={refreshing} className="shrink-0 text-on-surface-variant/60 hover:text-primary transition-colors p-1">
               <span className={`material-symbols-outlined text-[18px] ${refreshing ? 'animate-spin' : ''}`}>refresh</span>
