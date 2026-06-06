@@ -64,7 +64,7 @@ export default function MessagesPage() {
   const [searchParams] = useSearchParams();
   const focusPostId = searchParams.get('post');
   const toast = useToast();
-  const { user } = useAuth();
+  const { user, profile: authProfile } = useAuth();
   const [posts, setPosts] = useState([]);
   const [profiles, setProfiles] = useState({});
   const [filterOpen, setFilterOpen] = useState(false);
@@ -165,6 +165,9 @@ export default function MessagesPage() {
   const [activeTime, setActiveTime] = useState("");
   const [activeDateLabel, setActiveDateLabel] = useState("");
 
+  // 从 AuthContext 同步当前用户的 profile（含头像）
+  const { profile: authProfile } = useAuth()
+
   // 位置相关 — GPS定位 + 查看位置
   const { location, accuracy, loading: locLoading, error: locError, permissionDenied, requestLocation } = useLocation()
   // GPS定位成功后默认查看位置=GPS位置
@@ -179,12 +182,14 @@ export default function MessagesPage() {
   const prevPostCountRef = useRef(0);
 
   function fetchProfiles() {
+    // 合并当前用户的 profile（含头像）到 profiles 映射
+    const currentProfile = authProfile ? { [user?.id]: authProfile } : {};
     supabase.from("profiles").select("*").then(({ data }) => {
+      const map = { ...currentProfile };
       if (data) {
-        const map = {};
         data.forEach((p) => { map[p.id] = p; });
-        setProfiles(map);
       }
+      setProfiles(map);
     });
   }
 
@@ -731,8 +736,8 @@ export default function MessagesPage() {
       {/* 展开的输入面板 */}
       {composeOpen && (
         <div className="fixed inset-0 z-[80] flex flex-col justify-end" onClick={() => setComposeOpen(false)}>
-          <div className="bg-white rounded-t-2xl shadow-xl pb-8" onClick={e => e.stopPropagation()}
-            style={{ paddingBottom: keyboardHeight > 50 ? keyboardHeight : 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}>
+          <div className="bg-white rounded-t-2xl shadow-xl" onClick={e => e.stopPropagation()}
+            style={{ paddingBottom: keyboardHeight > 20 ? keyboardHeight : 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}>
             <div className="w-10 h-1 bg-surface-variant rounded-full mx-auto mb-4 mt-2" />
             <div className="px-4">
               {/* 回复上下文 */}

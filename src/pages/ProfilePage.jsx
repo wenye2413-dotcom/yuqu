@@ -254,7 +254,7 @@ export default function ProfilePage() {
       </div>
 
       <Modal open={editOpen} onClose={() => setEditOpen(false)} title="编辑资料">
-        <div className="space-y-3">
+        <div className="space-y-3 pb-16">
           <div className="space-y-3 overflow-y-auto" style={{ maxHeight: '35vh' }}>
             <input type="text" value={editName} onChange={e => setEditName(e.target.value)} placeholder="昵称"
               className="w-full bg-surface-container-low rounded-xl px-4 py-3 text-sm outline-none border border-outline-variant/30" />
