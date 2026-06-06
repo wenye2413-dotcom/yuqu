@@ -165,9 +165,6 @@ export default function MessagesPage() {
   const [activeTime, setActiveTime] = useState("");
   const [activeDateLabel, setActiveDateLabel] = useState("");
 
-  // 从 AuthContext 同步当前用户的 profile（含头像）
-  const { profile: authProfile } = useAuth()
-
   // 位置相关 — GPS定位 + 查看位置
   const { location, accuracy, loading: locLoading, error: locError, permissionDenied, requestLocation } = useLocation()
   // GPS定位成功后默认查看位置=GPS位置
