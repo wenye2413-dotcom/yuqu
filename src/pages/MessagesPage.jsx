@@ -69,7 +69,25 @@ export default function MessagesPage() {
   const [profiles, setProfiles] = useState({});
   const [filterOpen, setFilterOpen] = useState(false);
   const [expandedId, setExpandedId] = useState(null);
-  const [viewLocation, setViewLocation] = useState(null);    // 当前查看位置（默认=GPS）
+  const [viewLocation, setViewLocation] = useState(null);
+
+  // 从 URL 参数读取时间筛选（来自侧边栏）
+  useEffect(() => {
+    const timeParam = searchParams.get('time')
+    if (timeParam && timeRanges.includes(timeParam)) {
+      setActiveTime(timeParam)
+      if (timeParam === '自定义') {
+        const dateParam = searchParams.get('date')
+        if (dateParam) {
+          setFilterDateValue(dateParam)
+          setActiveDateLabel(dateParam)
+        }
+      } else {
+        setFilterDateValue('')
+        setActiveDateLabel('')
+      }
+    }
+  }, [searchParams])
   const [showLocPicker, setShowLocPicker] = useState(false);
   const [locSearch, setLocSearch] = useState("");
 

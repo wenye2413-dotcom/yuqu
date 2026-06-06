@@ -24,7 +24,11 @@ export default function Sidebar({ open, onClose }) {
   const applyTimeFilter = (range) => {
     setTimeFilter(range)
     if (range !== "自定义") setDateValue("")
-    // 可以通过 URL 参数或直接通知消息页刷新
+    // 通过 URL 参数通知消息页
+    const params = new URLSearchParams(window.location.search)
+    params.set('time', range)
+    if (range === '自定义') params.set('date', dateValue)
+    navigate(`${window.location.pathname}?${params.toString()}`, { replace: true })
     onClose()
   }
 
